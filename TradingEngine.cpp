@@ -25,5 +25,20 @@ void TradingEngine::shutDown(){
 }
 
 void TradingEngine::run(){
-    ;
+    while(true){
+        if(mShmemManager->gotResp()){
+            processResp();
+        }
+        else if(mShmemManager->gotMD()){
+            processMD();
+        }
+    }
+}
+
+void TradingEngine::processResp(){
+    mShmemManager->getResp(currentResp);
+}
+
+void TradingEngine::processMD(){
+    mShmemManager->getMD(currentMD);
 }

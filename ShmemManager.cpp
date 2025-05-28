@@ -36,6 +36,9 @@ void ShmemManager::startUp(){
     }
     close(shm_fd);
 
+    next_md_read_index = md_shmem->next_write_index;
+    next_md_read_page = md_shmem->next_write_page;
+
     shm_size = sizeof(ReqShmem);
 
     // Create or open the shared memory object
@@ -50,7 +53,7 @@ void ShmemManager::startUp(){
     }
 
     // Map the shared memory object into the process's address space
-    req_shmem = (ReqShmem*)mmap(0, shm_size, PROT_READ, MAP_SHARED, shm_fd, 0);
+    req_shmem = (ReqShmem*)mmap(0, shm_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (md_shmem == MAP_FAILED) {
         perror("mmap");
     }
@@ -74,6 +77,9 @@ void ShmemManager::startUp(){
         perror("mmap");
     }
     close(shm_fd);
+
+    next_resp_read_index = resp_shmem->next_write_index;
+    next_resp_read_page = resp_shmem->next_write_page;
 }
 
 void ShmemManager::shutDown(){
@@ -87,5 +93,44 @@ void ShmemManager::shutDown(){
 
     if (munmap(resp_shmem, sizeof(RespShmem)) == -1) {
         perror("munmap");
+    }
+}
+
+bool ShmemManager::gotMD(){
+    if(md_shmem->next_write_index != next_md_read_index)
+        return true;
+    return false;
+}
+
+bool ShmemManager::gotResp(){
+    if(resp_shmem->next_write_index != next_resp_read_index)
+        return true;
+    return false;
+}
+
+void ShmemManager::getMD(MDupdate& newMD){
+    newMD = md_shmem->m_queue[next_md_read_index];
+    next_md_read_index++;
+    if(next_md_read_index >= MD_QUEUE_SIZE){
+        next_md_read_index = 0;
+        next_md_read_page++;
+    }
+}
+
+void ShmemManager::getResp(Response& newResp){
+    newResp = resp_shmem->m_queue[next_resp_read_index];
+    next_resp_read_index++;
+    if(next_resp_read_index >= RESP_QUEUE_SIZE){
+        next_resp_read_index = 0;
+        next_resp_read_page++;
+    }
+}
+
+void ShmemManager::pushReq(const Request& newReq){
+    req_shmem->m_queue[req_shmem->next_write_index] = newReq;
+    req_shmem->next_write_index++;
+    if(req_shmem->next_write_index >= REQ_QUEUE_SIZE){
+        req_shmem->next_write_index = 0;
+        req_shmem->next_write_page++;
     }
 }

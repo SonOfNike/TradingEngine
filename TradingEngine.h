@@ -4,6 +4,8 @@
 #include "RMManager.h"
 #include "LogManager.h"
 #include "ConfManager.h"
+#include "../Utils/Response.h"
+#include "../Utils/MDupdate.h"
 
 class TradingEngine {
     // singletons
@@ -11,6 +13,8 @@ class TradingEngine {
     RMManager* mRMManager;
     ConfManager* mConfManager;
     ShmemManager* mShmemManager;
+    MDupdate    currentMD;
+    Response    currentResp;
 
 public:
     TradingEngine(){;}
@@ -18,4 +22,6 @@ public:
     void startUp();
     void shutDown();
     void run();
+    void processMD();
+    void processResp();
 };
