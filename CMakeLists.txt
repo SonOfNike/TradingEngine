@@ -4,7 +4,9 @@ project(TradingEngine VERSION 0.1.0 LANGUAGES C CXX)
 add_executable(TradingEngine 
     main.cpp
     TradingEngine.cpp
-    ShmemManager.cpp)
+    ShmemManager.cpp
+    ../Utils/SymbolIDManager.cpp
+    ../Utils/simdjson/simdjson.cpp)
 
 include(CTest)
 enable_testing()

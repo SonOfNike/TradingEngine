@@ -97,15 +97,17 @@ void ShmemManager::shutDown(){
 }
 
 bool ShmemManager::gotMD(){
-    if(md_shmem->next_write_index != next_md_read_index)
-        return true;
-    return false;
+    if(md_shmem->next_write_index == next_md_read_index &&
+       md_shmem->next_write_page == next_md_read_page)
+        return false;
+    return true;
 }
 
 bool ShmemManager::gotResp(){
-    if(resp_shmem->next_write_index != next_resp_read_index)
-        return true;
-    return false;
+    if(resp_shmem->next_write_index == next_resp_read_index &&
+       resp_shmem->next_write_page == next_resp_read_page)
+        return false;
+    return true;
 }
 
 void ShmemManager::getMD(MDupdate& newMD){
