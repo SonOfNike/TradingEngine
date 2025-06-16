@@ -19,23 +19,28 @@ class SymbolManager {
     Shares imbalance_quant = 0;
     Shares paired_shares = 0;
 
-    void gotPrint(){
-
-    }
-
-    void gotBid(){
-
-    }
-
-    void gotAsk(){
-
-    }
-
-    void gotImbalance(){
-        
-    }
-
+    Timestamp current_time = 0;
 public:
+    void gotPrint(Price _print_price, Shares _print_shares, Timestamp _current_time){
+        latest_print_price = _print_price;
+        latest_print_quant = _print_shares;
+        current_time = _current_time;
+    }
+
+    void gotBid(){;}
+
+    void gotAsk(){;}
+
+    void gotQuote(Price _bid_price, Shares _bid_shares, Price _ask_price, Shares _ask_shares, Timestamp _current_time){
+        bid_price = _bid_price;
+        bid_quant = _bid_shares;
+        ask_price = _ask_price;
+        ask_quant = _ask_shares;
+        current_time = _current_time;
+    }
+
+    void gotImbalance(){;}
+
     Price getLatestPrintPrice(){
         return latest_print_price;
     }
@@ -86,4 +91,8 @@ public:
     Shares getImbalanceQuant(){
         return imbalance_quant;
     }
-}
+
+    Timestamp getCurrentTime(){
+        return current_time;
+    }
+};

@@ -4,9 +4,12 @@
 #include "RMManager.h"
 #include "LogManager.h"
 #include "ConfManager.h"
+#include "SymbolManager.h"
+#include "StrategyManager.h"
 #include "../Utils/Response.h"
 #include "../Utils/MDupdate.h"
 #include "../Utils/SymbolIDManager.h"
+#include <vector>
 
 class TradingEngine {
     // singletons
@@ -16,11 +19,11 @@ class TradingEngine {
     ShmemManager* mShmemManager;
     SymbolIDManager* mSymIDManager;
 
-
     MDupdate    currentMD;
     Response    currentResp;
 
-    
+    std::vector<StrategyManager> m_strat_managers;
+    std::vector<SymbolManager> m_symbol_managers;
 
 public:
     TradingEngine(){;}

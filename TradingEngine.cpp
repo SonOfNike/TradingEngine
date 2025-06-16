@@ -42,7 +42,7 @@ void TradingEngine::run(){
 
 void TradingEngine::processResp(){
     mShmemManager->getResp(currentResp);
-
+    m_strat_managers[currentResp.m_symbolId].processResp(currentResp);
 }
 
 void TradingEngine::processMD(){
@@ -51,10 +51,14 @@ void TradingEngine::processMD(){
         std::cout << "Received trade" << std::endl;
         std::cout << "Trade Price:" << currentMD.m_bid_price << std::endl;
         std::cout << "Trade Quant:" << currentMD.m_bid_quant << std::endl;
+        m_symbol_managers[currentMD.m_symbolId].gotPrint(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_timestamp);
+        m_strat_managers[currentMD.m_symbolId].gotPrint();
     }
     else if(currentMD.m_type == md_type::QUOTE){
         std::cout << "Received quote" << std::endl;
         std::cout << "Bid Price:" << currentMD.m_bid_price << std::endl;
         std::cout << "Ask Price:" << currentMD.m_ask_price << std::endl;
+        m_symbol_managers[currentMD.m_symbolId].gotQuote(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_ask_price, currentMD.m_ask_quant, currentMD.m_timestamp);
+        m_strat_managers[currentMD.m_symbolId].gotQuote();
     }
 }
