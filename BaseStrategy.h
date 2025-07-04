@@ -3,6 +3,7 @@
 #include "BaseState.h"
 #include "SymbolManager.h"
 #include "../Utils/simdjson/simdjson.h"
+#include "../Utils/OrderItem.h"
 
 class BaseStrategy{
 public:
@@ -17,12 +18,16 @@ public:
         m_strat_id = _strat_id;
     }
 
-    void run(){current_state->run();}
-    void gotPrint(){current_state->gotPrint();}
-    void gotQuote(){current_state->gotQuote();}
-    void gotImbalance(){current_state->gotImbalance();}
+    virtual void run(){current_state->run();}
+    virtual void gotPrint(){current_state->gotPrint();}
+    virtual void gotQuote(){current_state->gotQuote();}
+    virtual void gotImbalance(){current_state->gotImbalance();}
 
     virtual void ready_to_start() = 0;
+    virtual void triggerCheck() = 0;
+    virtual void cancelOpen() = 0;
+    virtual void ordersOut() = 0;
+    virtual void covering() = 0;
     virtual void onInit(SymbolManager* _sym_man, SymbolId _strat_id, simdjson::dom::element _strat) = 0;
 
     void setState(BaseState* new_state){
@@ -30,4 +35,8 @@ public:
     }
 
     void processResp(const Response& _new_response){;}
+
+    void sendOrder(OrderItem& _order_item){;}
+
+    void sendCancel(OrderItem& _order_item){;}
 };

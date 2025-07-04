@@ -21,6 +21,7 @@ class SymbolManager {
 
     Timestamp current_time = 0;
 public:
+    Timestamp opening_auction = 0;
     void gotPrint(Price _print_price, Shares _print_shares, Timestamp _current_time){
         latest_print_price = _print_price;
         latest_print_quant = _print_shares;
@@ -94,5 +95,16 @@ public:
 
     Timestamp getCurrentTime(){
         return current_time;
+    }
+
+    Timestamp getOpeningAuctionTime(){
+        return opening_auction;
+    }
+
+    bool gotQuotes(){
+        if(bid_price == 0) return false;
+        if(ask_price == 0) return false;
+
+        return true;
     }
 };
