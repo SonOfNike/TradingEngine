@@ -3,6 +3,7 @@
 #include "../Utils/enums_typedef.h"
 
 class SymbolManager {
+    SymbolId sym_id = 0;
     // latest print data
     Price latest_print_price = 0;
     Shares latest_print_quant = 0;
@@ -106,5 +107,9 @@ public:
         if(ask_price == 0) return false;
 
         return true;
+    }
+
+    SymbolId getSymbolID(){
+        return sym_id;
     }
 };

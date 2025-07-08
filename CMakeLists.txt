@@ -5,6 +5,8 @@ add_executable(TradingEngine
     main.cpp
     TradingEngine.cpp
     ShmemManager.cpp
+    StrategyManager.cpp
+    BaseStrategy.cpp
     ../Utils/SymbolIDManager.cpp
     ../Utils/simdjson/simdjson.cpp)
 
