@@ -19,10 +19,13 @@ class SymbolManager {
     Price far_price = 0;
     Shares imbalance_quant = 0;
     Shares paired_shares = 0;
+    Timestamp opening_auction = 0;
 
     Timestamp current_time = 0;
+
+    bool is_shortable = true;
 public:
-    Timestamp opening_auction = 0;
+    
     void gotPrint(Price _print_price, Shares _print_shares, Timestamp _current_time){
         latest_print_price = _print_price;
         latest_print_quant = _print_shares;
@@ -109,7 +112,17 @@ public:
         return true;
     }
 
+    void OnInit(SymbolId _sym_id, Timestamp _market_open, bool _is_shortable){
+        sym_id = _sym_id;
+        opening_auction = _market_open;
+        is_shortable = _is_shortable;
+    }
+
     SymbolId getSymbolID(){
         return sym_id;
+    }
+
+    bool isShortable(){
+        return is_shortable;
     }
 };

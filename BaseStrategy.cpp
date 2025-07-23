@@ -7,6 +7,7 @@ void BaseStrategy::sendOrder(OrderItem& _order_item){
     next_req.m_req_price = _order_item.m_order_price;
     next_req.m_order_quant = _order_item.m_order_quant;
     next_req.m_total_fills = 0;
+    next_req.m_order_side = _order_item.m_side;
     next_req.m_order_id = mShmemManager->getNextOrderID();
     next_req.m_symbolId = sym_man->getSymbolID();
     mShmemManager->pushReq(next_req);

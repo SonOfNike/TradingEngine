@@ -4,6 +4,7 @@
 void StrategyManager::OnInit(SymbolManager* _sym_man, simdjson::dom::element _symbol){
     for(auto strat : _symbol["strats"])
     {
+        std::cout << "Get strat_name" << std::endl;
         std::string_view value = strat["strat_name"].get_string();
         if(value == "meanRevert"){
             m_strategies.emplace_back(new MeanRevertStrategy);
