@@ -16,7 +16,6 @@ private:
     RespShmem* resp_shmem = nullptr;
     int32_t next_resp_read_index = 0;
     int32_t next_resp_read_page = 0;
-    OrderId next_order_id = 0;
 
     static ShmemManager* uniqueInstance;
     ShmemManager(){;}

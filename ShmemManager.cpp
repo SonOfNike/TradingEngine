@@ -138,6 +138,6 @@ void ShmemManager::pushReq(const Request& newReq){
 }
 
 OrderId ShmemManager::getNextOrderID(){
-    next_order_id++;
-    return next_order_id;
+    req_shmem->next_order_id++;
+    return req_shmem->next_order_id;
 }
