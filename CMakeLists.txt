@@ -9,6 +9,7 @@ add_executable(TradingEngine
     TradingEngine.cpp
     ShmemManager.cpp
     StrategyManager.cpp
+    RMManager.cpp
     BaseStrategy.cpp
     ../ReqAlpacaAPI/config.cpp
     ../ReqAlpacaAPI/client.cpp

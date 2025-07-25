@@ -22,8 +22,6 @@ class TradingEngine {
     MDupdate    currentMD;
     Response    currentResp;
 
-    SymbolId next_sym_id = 0;
-
     std::vector<StrategyManager*> m_strat_managers;
     std::vector<SymbolManager*> m_symbol_managers;
 

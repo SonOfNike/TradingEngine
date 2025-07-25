@@ -32,14 +32,29 @@ void BaseStrategy::sendCancel(OrderItem& _order_item){
 
 void BaseStrategy::processResp(const Response& _new_response){
     if(_new_response.m_type == resp_type::TRADE_CONFIRM){
-        if(_new_response.m_side == side::BUY)
-        {
-            m_strat_position += _new_response.m_resp_quant;
-        }
-        else if(_new_response.m_side == side::SELL)
-        {
-            m_strat_position -= _new_response.m_resp_quant;
-        }
+        processRMFill(_new_response.m_side, _new_response.m_resp_price, _new_response.m_resp_quant);
     }
     gotResp(_new_response);
+}
+
+void BaseStrategy::processRMFill(side _side,Price _price, Shares _shares){
+    mRMManager->subtractExposure(m_exposure);
+    if(_side == side::BUY)
+    {
+        m_strat_position += _shares;
+        m_exposure -= _price * _shares;
+    }
+    else if(_side == side::SELL)
+    {
+        m_strat_position -= _shares;
+        m_exposure += _price * _shares;
+    }
+
+    if(m_strat_position == 0){
+        mRMManager->subtractPNL(m_pnl);
+        m_pnl += m_exposure;
+        m_exposure = 0;
+        mRMManager->addPNL(m_pnl);
+    }
+    mRMManager->addExposure(m_exposure);
 }

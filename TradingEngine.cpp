@@ -5,12 +5,14 @@
 
 void TradingEngine::startUp(){
     // mLogManager = new LogManager();
-    // mRMManager = new RMManager();
+    mRMManager = RMManager::getInstance();
     // mConfManager = new ConfManager();
     mSymIDManager = SymbolIDManager::getInstance();
     mShmemManager = ShmemManager::getInstance();
 
     mSymIDManager->startUp();
+    mRMManager->startUp();
+    mShmemManager->startUp();
 
     simdjson::dom::parser parser;
 
@@ -44,22 +46,20 @@ void TradingEngine::startUp(){
     }
 
     // mLogManager->startUp();
-    // mRMManager->startUp();
     // mConfManager->startUp();
-    mShmemManager->startUp();
 }
 
 void TradingEngine::shutDown(){
     // mLogManager->shutDown();
-    // mRMManager->shutDown();
     // mConfManager->shutDown();
     mShmemManager->shutDown();
+    mRMManager->shutDown();
     mSymIDManager->shutDown();
 
     // delete mLogManager;
-    // delete mRMManager;
     // delete mConfManager;
     delete mShmemManager;
+    delete mRMManager;
     delete mSymIDManager;
 }
 

@@ -3,6 +3,7 @@
 #include "BaseState.h"
 #include "SymbolManager.h"
 #include "ShmemManager.h"
+#include "RMManager.h"
 #include "../Utils/simdjson/simdjson.h"
 #include "../Utils/OrderItem.h"
 #include "../Utils/Request.h"
@@ -15,9 +16,12 @@ public:
     SymbolManager* sym_man;
     StrategyManager* strat_man;
     ShmemManager* mShmemManager;
+    RMManager* mRMManager;
     SymbolId m_strat_id = 0;
 
     Shares m_strat_position = 0;
+    Price m_exposure = 0;
+    Price m_pnl = 0;
 
     Request next_req;
 
@@ -26,6 +30,7 @@ public:
         strat_man = _strat_man;
         m_strat_id = _strat_id;
         mShmemManager = ShmemManager::getInstance();
+        mRMManager = RMManager::getInstance();
     }
 
     virtual void run(){current_state->run();}
@@ -51,4 +56,6 @@ public:
     void sendOrder(OrderItem& _order_item);
 
     void sendCancel(OrderItem& _order_item);
+
+    void processRMFill(side _side,Price _price, Shares _shares);
 };
