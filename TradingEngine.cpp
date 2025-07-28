@@ -23,7 +23,7 @@ void TradingEngine::startUp(){
         m_strat_managers.emplace_back(new StrategyManager);
     }
 
-    doc = parser.load("/home/git_repos/Strategies/param_list.json");
+    doc = parser.load("/home/git_repos/FinvizData/output.json");
     
     simdjson::dom::object obj = doc["symbols"].get_object();
 

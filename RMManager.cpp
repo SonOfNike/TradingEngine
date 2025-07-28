@@ -27,11 +27,11 @@ void RMManager::shutDown(){
 }
 
 void RMManager::subtractExposure(Price _exposure){
-    m_global_exposure -= _exposure;
+    m_global_exposure -= abs(_exposure);
 }
 
 void RMManager::addExposure(Price _exposure){
-    m_global_exposure += _exposure;
+    m_global_exposure += abs(_exposure);
 }
 
 void RMManager::subtractPNL(Price _pnl){

@@ -7,6 +7,7 @@
 #include "../Utils/simdjson/simdjson.h"
 #include "../Utils/OrderItem.h"
 #include "../Utils/Request.h"
+#include "../Utils/SymbolIDManager.h"
 
 class StrategyManager;
 
@@ -16,6 +17,7 @@ public:
     SymbolManager* sym_man;
     StrategyManager* strat_man;
     ShmemManager* mShmemManager;
+    SymbolIDManager* mSymIDManager;
     RMManager* mRMManager;
     SymbolId m_strat_id = 0;
 
@@ -31,6 +33,7 @@ public:
         m_strat_id = _strat_id;
         mShmemManager = ShmemManager::getInstance();
         mRMManager = RMManager::getInstance();
+        mSymIDManager = SymbolIDManager::getInstance();
     }
 
     virtual void run(){current_state->run();}

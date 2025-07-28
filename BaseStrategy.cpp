@@ -1,5 +1,6 @@
 #include "StrategyManager.h"
 #include "BaseStrategy.h"
+#include "glog/logging.h"
 
 void BaseStrategy::sendOrder(OrderItem& _order_item){
     next_req.clear();
@@ -43,11 +44,15 @@ void BaseStrategy::processRMFill(side _side,Price _price, Shares _shares){
     {
         m_strat_position += _shares;
         m_exposure -= _price * _shares;
+        DLOG(INFO) << "TRADE|STRAT_ID=" << m_strat_id << "|SYMBOL=" << mSymIDManager->getTicker(sym_man->getSymbolID()) << 
+           "|SIDE=BUY|PRICE=" << _price << "|QUANT=" << _shares << "|TIMESTAMP=" << sym_man->getCurrentTime();
     }
     else if(_side == side::SELL)
     {
         m_strat_position -= _shares;
         m_exposure += _price * _shares;
+        DLOG(INFO) << "TRADE|STRAT_ID=" << m_strat_id << "|SYMBOL=" << mSymIDManager->getTicker(sym_man->getSymbolID()) << 
+           "|SIDE=SELL|PRICE=" << _price << "|QUANT=" << _shares << "|TIMESTAMP=" << sym_man->getCurrentTime();
     }
 
     if(m_strat_position == 0){
