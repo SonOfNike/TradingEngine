@@ -41,8 +41,8 @@ void TradingEngine::startUp(){
         auto asset = asset_response.second;
 
         SymbolId next_sym_id = mSymIDManager->getID(field.key);
-        m_strat_managers[next_sym_id]->OnInit(m_symbol_managers[next_sym_id],doc["symbols"][field.key]);
         m_symbol_managers[next_sym_id]->OnInit(next_sym_id, open_time, asset.easy_to_borrow);
+        m_strat_managers[next_sym_id]->OnInit(m_symbol_managers[next_sym_id],doc["symbols"][field.key]);
     }
 
     // mLogManager->startUp();
@@ -66,6 +66,7 @@ void TradingEngine::shutDown(){
 void TradingEngine::run(){
     while(true){
         if(mShmemManager->gotResp()){
+            DLOG(INFO) << "DEBUG|GOT_RESPONSE";
             processResp();
         }
         else if(mShmemManager->gotMD()){
@@ -76,22 +77,17 @@ void TradingEngine::run(){
 
 void TradingEngine::processResp(){
     mShmemManager->getResp(currentResp);
+    DLOG(INFO) << "DEBUG|RESPONSE_INFO|SYM_ID=" << currentResp.m_symbolId << "|SYMBOL=" << mSymIDManager->getTicker(currentResp.m_symbolId);
     m_strat_managers[currentResp.m_symbolId]->processResp(currentResp);
 }
 
 void TradingEngine::processMD(){
     mShmemManager->getMD(currentMD);
     if(currentMD.m_type == md_type::PRINT){
-        std::cout << "Received trade" << std::endl;
-        std::cout << "Trade Price:" << currentMD.m_bid_price << std::endl;
-        std::cout << "Trade Quant:" << currentMD.m_bid_quant << std::endl;
         m_symbol_managers[currentMD.m_symbolId]->gotPrint(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_timestamp);
         m_strat_managers[currentMD.m_symbolId]->gotPrint();
     }
     else if(currentMD.m_type == md_type::QUOTE){
-        std::cout << "Received quote" << std::endl;
-        std::cout << "Bid Price:" << currentMD.m_bid_price << std::endl;
-        std::cout << "Ask Price:" << currentMD.m_ask_price << std::endl;
         m_symbol_managers[currentMD.m_symbolId]->gotQuote(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_ask_price, currentMD.m_ask_quant, currentMD.m_timestamp);
         m_strat_managers[currentMD.m_symbolId]->gotQuote();
     }

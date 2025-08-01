@@ -43,6 +43,7 @@ public:
 
     virtual void gotResp(const Response& _new_response) = 0;
 
+    virtual void logParams() = 0;
     virtual void ready_to_start() = 0;
     virtual void triggerCheck() = 0;
     virtual void cancelOpen() = 0;

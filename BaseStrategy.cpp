@@ -13,6 +13,10 @@ void BaseStrategy::sendOrder(OrderItem& _order_item){
     next_req.m_symbolId = sym_man->getSymbolID();
     mShmemManager->pushReq(next_req);
 
+    DLOG(INFO) << "ORDER_INFO|STRAT_ID=" << m_strat_id << "|SYMBOL=" << mSymIDManager->getTicker(sym_man->getSymbolID()) << 
+            "|NEWORDER|ORDERID=" << next_req.m_order_id << "|PRICE=" << _order_item.m_order_price << "|QUANT=" << 
+            _order_item.m_order_quant << "|CURRENT_TIME=" << sym_man->getCurrentTime();
+
     _order_item.m_id = next_req.m_order_id;
     _order_item.m_state = order_state::PENDING_NEW;
     strat_man->trackOrder(next_req.m_order_id, m_strat_id);
@@ -28,10 +32,14 @@ void BaseStrategy::sendCancel(OrderItem& _order_item){
     next_req.m_symbolId = sym_man->getSymbolID();
     mShmemManager->pushReq(next_req);
 
+    DLOG(INFO) << "ORDER_INFO|STRAT_ID=" << m_strat_id << "|SYMBOL=" << mSymIDManager->getTicker(sym_man->getSymbolID()) << 
+            "|CANCELORDER|ORDERID=" << next_req.m_order_id << "|CURRENT_TIME=" << sym_man->getCurrentTime();
+
     _order_item.m_state = order_state::PENDING_CANCEL;
 }
 
 void BaseStrategy::processResp(const Response& _new_response){
+    DLOG(INFO) << "DEBUG|STRAT_GOT_RESPONSE|STRAT_ID=" << m_strat_id << "|SYMBOL=" << mSymIDManager->getTicker(sym_man->getSymbolID());
     if(_new_response.m_type == resp_type::TRADE_CONFIRM){
         processRMFill(_new_response.m_side, _new_response.m_resp_price, _new_response.m_resp_quant);
     }
