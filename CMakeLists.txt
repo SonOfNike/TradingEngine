@@ -11,6 +11,7 @@ add_executable(TradingEngine
     StrategyManager.cpp
     RMManager.cpp
     BaseStrategy.cpp
+    TimeManager.cpp
     ../ReqAlpacaAPI/config.cpp
     ../ReqAlpacaAPI/client.cpp
     ../ReqAlpacaAPI/account.cpp

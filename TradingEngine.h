@@ -5,9 +5,11 @@
 #include "LogManager.h"
 #include "ConfManager.h"
 #include "SymbolManager.h"
+#include "TimeManager.h"
 #include "StrategyManager.h"
 #include "../Utils/Response.h"
 #include "../Utils/MDupdate.h"
+#include "../Utils/Timeout.h"
 #include "../Utils/SymbolIDManager.h"
 #include <vector>
 
@@ -18,9 +20,12 @@ class TradingEngine {
     ConfManager* mConfManager;
     ShmemManager* mShmemManager;
     SymbolIDManager* mSymIDManager;
+    TimeManager* mTimeManager;
 
     MDupdate    currentMD;
     Response    currentResp;
+    Timeout     currentTimeout;
+    Timestamp   currentTime = 0;
 
     std::vector<StrategyManager*> m_strat_managers;
     std::vector<SymbolManager*> m_symbol_managers;
@@ -33,4 +38,5 @@ public:
     void run();
     void processMD();
     void processResp();
+    void processTimeout();
 };

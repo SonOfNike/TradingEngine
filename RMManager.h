@@ -18,10 +18,10 @@ public:
     static RMManager* getInstance();
     void startUp();
     void shutDown();
-    void subtractExposure(Price _exposure);
-    void addExposure(Price _exposure);
-    void subtractPNL(Price _pnl);
-    void addPNL(Price _pnl);
+    void subtractExposure(const Price& _exposure);
+    void addExposure(const Price& _exposure);
+    void subtractPNL(const Price& _pnl);
+    void addPNL(const Price& _pnl);
     bool exposureLimitBreached();
     bool pnlLimitBreached();
     Price getSymPnLLimit();

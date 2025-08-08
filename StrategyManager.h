@@ -16,8 +16,9 @@ public:
     void gotPrint();
     void gotQuote();
     void gotImbalance();
+    void gotTimeout(const SymbolId& strat_id);
 
-    void trackOrder(OrderId _order_id, SymbolId _strat_id);
+    void trackOrder(const OrderId& _order_id, const SymbolId& _strat_id);
 
     void processResp(const Response& _new_response);
 

@@ -30,7 +30,11 @@ void StrategyManager::gotImbalance(){
     }
 }
 
-void StrategyManager::trackOrder(OrderId _order_id, SymbolId _strat_id){
+void StrategyManager::gotTimeout(const SymbolId& strat_id){
+    m_strategies[strat_id]->gotTimeout();
+}
+
+void StrategyManager::trackOrder(const OrderId& _order_id, const SymbolId& _strat_id){
     id_to_strat_id[_order_id] = _strat_id;
 }
 

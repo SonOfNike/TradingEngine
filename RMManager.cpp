@@ -26,19 +26,19 @@ void RMManager::shutDown(){
     
 }
 
-void RMManager::subtractExposure(Price _exposure){
+void RMManager::subtractExposure(const Price& _exposure){
     m_global_exposure -= abs(_exposure);
 }
 
-void RMManager::addExposure(Price _exposure){
+void RMManager::addExposure(const Price& _exposure){
     m_global_exposure += abs(_exposure);
 }
 
-void RMManager::subtractPNL(Price _pnl){
+void RMManager::subtractPNL(const Price& _pnl){
     m_global_pnl -= _pnl;
 }
 
-void RMManager::addPNL(Price _pnl){
+void RMManager::addPNL(const Price& _pnl){
     m_global_pnl += _pnl;
 }
 

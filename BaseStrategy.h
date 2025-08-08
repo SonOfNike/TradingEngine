@@ -3,6 +3,7 @@
 #include "BaseState.h"
 #include "SymbolManager.h"
 #include "ShmemManager.h"
+#include "TimeManager.h"
 #include "RMManager.h"
 #include "../Utils/simdjson/simdjson.h"
 #include "../Utils/OrderItem.h"
@@ -19,6 +20,7 @@ public:
     ShmemManager* mShmemManager;
     SymbolIDManager* mSymIDManager;
     RMManager* mRMManager;
+    TimeManager* mTimeManager;
     SymbolId m_strat_id = 0;
 
     Shares m_strat_position = 0;
@@ -34,12 +36,14 @@ public:
         mShmemManager = ShmemManager::getInstance();
         mRMManager = RMManager::getInstance();
         mSymIDManager = SymbolIDManager::getInstance();
+        mTimeManager = TimeManager::getInstance();
     }
 
     virtual void run(){current_state->run();}
     virtual void gotPrint(){current_state->gotPrint();}
     virtual void gotQuote(){current_state->gotQuote();}
     virtual void gotImbalance(){current_state->gotImbalance();}
+    virtual void gotTimeout(){current_state->gotTimeout();}
 
     virtual void gotResp(const Response& _new_response) = 0;
 
@@ -61,5 +65,7 @@ public:
 
     void sendCancel(OrderItem& _order_item);
 
-    void processRMFill(side _side,Price _price, Shares _shares);
+    void setTimeout(const Timestamp& _time);
+
+    void processRMFill(const side& _side, const Price& _price, const Shares& _shares);
 };

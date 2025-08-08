@@ -12,4 +12,5 @@ public:
     virtual void gotPrint() = 0;
     virtual void gotQuote() = 0;
     virtual void gotImbalance() = 0;
+    virtual void gotTimeout() = 0;
 };

@@ -9,10 +9,12 @@ void TradingEngine::startUp(){
     // mConfManager = new ConfManager();
     mSymIDManager = SymbolIDManager::getInstance();
     mShmemManager = ShmemManager::getInstance();
+    mTimeManager = TimeManager::getInstance();
 
     mSymIDManager->startUp();
     mRMManager->startUp();
     mShmemManager->startUp();
+    mTimeManager->startUp();
 
     simdjson::dom::parser parser;
 
@@ -55,19 +57,23 @@ void TradingEngine::shutDown(){
     mShmemManager->shutDown();
     mRMManager->shutDown();
     mSymIDManager->shutDown();
+    mTimeManager->shutDown();
 
     // delete mLogManager;
     // delete mConfManager;
     delete mShmemManager;
     delete mRMManager;
     delete mSymIDManager;
+    delete mTimeManager;
 }
 
 void TradingEngine::run(){
     while(true){
         if(mShmemManager->gotResp()){
-            DLOG(INFO) << "DEBUG|GOT_RESPONSE";
             processResp();
+        }
+        else if(mTimeManager->gotTimeout(currentTime)){
+            processTimeout();
         }
         else if(mShmemManager->gotMD()){
             processMD();
@@ -77,7 +83,6 @@ void TradingEngine::run(){
 
 void TradingEngine::processResp(){
     mShmemManager->getResp(currentResp);
-    DLOG(INFO) << "DEBUG|RESPONSE_INFO|SYM_ID=" << currentResp.m_symbolId << "|SYMBOL=" << mSymIDManager->getTicker(currentResp.m_symbolId);
     m_strat_managers[currentResp.m_symbolId]->processResp(currentResp);
 }
 
@@ -91,4 +96,11 @@ void TradingEngine::processMD(){
         m_symbol_managers[currentMD.m_symbolId]->gotQuote(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_ask_price, currentMD.m_ask_quant, currentMD.m_timestamp);
         m_strat_managers[currentMD.m_symbolId]->gotQuote();
     }
+    currentTime = currentMD.m_timestamp;
+}
+
+void TradingEngine::processTimeout(){
+    mTimeManager->getTimeout(currentTimeout);
+    m_symbol_managers[currentTimeout.m_sym_id]->setCurrentTime(currentTime);
+    m_strat_managers[currentTimeout.m_sym_id]->gotTimeout(currentTimeout.m_strat_id);
 }
