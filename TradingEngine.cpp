@@ -43,7 +43,7 @@ void TradingEngine::startUp(){
         auto asset = asset_response.second;
 
         SymbolId next_sym_id = mSymIDManager->getID(field.key);
-        m_symbol_managers[next_sym_id]->OnInit(next_sym_id, open_time, asset.easy_to_borrow);
+        m_symbol_managers[next_sym_id]->OnInit(next_sym_id, open_time, asset.easy_to_borrow, mShmemManager);
         m_strat_managers[next_sym_id]->OnInit(m_symbol_managers[next_sym_id],doc["symbols"][field.key]);
     }
 
@@ -94,7 +94,7 @@ void TradingEngine::processMD(){
     }
     else if(currentMD.m_type == md_type::QUOTE){
         m_symbol_managers[currentMD.m_symbolId]->gotQuote(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_ask_price, currentMD.m_ask_quant, currentMD.m_timestamp);
-        m_strat_managers[currentMD.m_symbolId]->gotQuote();
+        // m_strat_managers[currentMD.m_symbolId]->gotQuote();
     }
     currentTime = currentMD.m_timestamp;
 }

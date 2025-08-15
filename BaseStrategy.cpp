@@ -14,6 +14,7 @@ void BaseStrategy::sendOrder(OrderItem& _order_item){
     mShmemManager->pushReq(next_req);
 
     _order_item.m_id = next_req.m_order_id;
+    _order_item.m_timestamp = sym_man->getCurrentTime();
     _order_item.m_state = order_state::PENDING_NEW;
     strat_man->trackOrder(next_req.m_order_id, m_strat_id);
 }
@@ -28,6 +29,7 @@ void BaseStrategy::sendCancel(OrderItem& _order_item){
     next_req.m_symbolId = sym_man->getSymbolID();
     mShmemManager->pushReq(next_req);
 
+    _order_item.m_timestamp = sym_man->getCurrentTime();
     _order_item.m_state = order_state::PENDING_CANCEL;
 }
 
@@ -44,15 +46,33 @@ void BaseStrategy::processRMFill(const side& _side, const Price& _price, const S
     {
         m_strat_position += _shares;
         m_exposure -= _price * _shares;
-        LOG(INFO) << "TRADE|STRAT_ID=" << m_strat_id << "|SYMBOL=" << mSymIDManager->getTicker(sym_man->getSymbolID()) << 
-           "|SIDE=BUY|PRICE=" << _price << "|QUANT=" << _shares << "|TIMESTAMP=" << sym_man->getCurrentTime();
+
+        next_log.clear();
+        next_log.m_type = log_type::TRADE;
+        next_log.m_side = side::BUY;
+        next_log.m_price = _price;
+        next_log.m_shares = _shares;
+        next_log.m_symbolId = sym_man->getSymbolID();
+        next_log.m_stratID = m_strat_id;
+        next_log.m_current_time = sym_man->getCurrentTime();
+
+        mShmemManager->pushLog(next_log);
     }
     else if(_side == side::SELL)
     {
         m_strat_position -= _shares;
         m_exposure += _price * _shares;
-        LOG(INFO) << "TRADE|STRAT_ID=" << m_strat_id << "|SYMBOL=" << mSymIDManager->getTicker(sym_man->getSymbolID()) << 
-           "|SIDE=SELL|PRICE=" << _price << "|QUANT=" << _shares << "|TIMESTAMP=" << sym_man->getCurrentTime();
+
+        next_log.clear();
+        next_log.m_type = log_type::TRADE;
+        next_log.m_side = side::SELL;
+        next_log.m_price = _price;
+        next_log.m_shares = _shares;
+        next_log.m_symbolId = sym_man->getSymbolID();
+        next_log.m_stratID = m_strat_id;
+        next_log.m_current_time = sym_man->getCurrentTime();
+
+        mShmemManager->pushLog(next_log);
     }
 
     if(m_strat_position == 0){

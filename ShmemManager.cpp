@@ -54,7 +54,27 @@ void ShmemManager::startUp(){
 
     // Map the shared memory object into the process's address space
     req_shmem = (ReqShmem*)mmap(0, shm_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-    if (md_shmem == MAP_FAILED) {
+    if (req_shmem == MAP_FAILED) {
+        perror("mmap");
+    }
+    close(shm_fd);
+
+    shm_size = sizeof(LogShmem);
+
+    // Create or open the shared memory object
+    shm_fd = shm_open(LOG_shm_name, O_RDWR, 0666);
+    if (shm_fd == -1) {
+        perror("shm_open");
+    }
+
+    // Configure the size of the shared memory object
+    if (ftruncate(shm_fd, shm_size) == -1) {
+        perror("ftruncate");
+    }
+
+    // Map the shared memory object into the process's address space
+    log_shmem = (LogShmem*)mmap(0, shm_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (log_shmem == MAP_FAILED) {
         perror("mmap");
     }
     close(shm_fd);
@@ -88,6 +108,10 @@ void ShmemManager::shutDown(){
     }
 
     if (munmap(req_shmem, sizeof(ReqShmem)) == -1) {
+        perror("munmap");
+    }
+
+    if (munmap(log_shmem, sizeof(LogShmem)) == -1) {
         perror("munmap");
     }
 
@@ -134,6 +158,15 @@ void ShmemManager::pushReq(const Request& newReq){
     if(req_shmem->next_write_index >= REQ_QUEUE_SIZE){
         req_shmem->next_write_index = 0;
         req_shmem->next_write_page++;
+    }
+}
+
+void ShmemManager::pushLog(const LogItem& newLog){
+    log_shmem->m_queue[log_shmem->next_write_index] = newLog;
+    log_shmem->next_write_index++;
+    if(log_shmem->next_write_index >= LOG_QUEUE_SIZE){
+        log_shmem->next_write_index = 0;
+        log_shmem->next_write_page++;
     }
 }
 

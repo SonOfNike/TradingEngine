@@ -8,6 +8,7 @@
 #include "../Utils/simdjson/simdjson.h"
 #include "../Utils/OrderItem.h"
 #include "../Utils/Request.h"
+#include "../Utils/LogItem.h"
 #include "../Utils/SymbolIDManager.h"
 
 class StrategyManager;
@@ -21,6 +22,7 @@ public:
     SymbolIDManager* mSymIDManager;
     RMManager* mRMManager;
     TimeManager* mTimeManager;
+
     SymbolId m_strat_id = 0;
 
     Shares m_strat_position = 0;
@@ -28,6 +30,7 @@ public:
     Price m_pnl = 0;
 
     Request next_req;
+    LogItem next_log;
 
     void onInit(SymbolManager* _sym_man, SymbolId _strat_id, StrategyManager* _strat_man){
         sym_man = _sym_man;

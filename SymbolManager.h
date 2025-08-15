@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../Utils/enums_typedef.h"
+#include "ShmemManager.h"
 #include "../Utils/globals.h"
+#include "../Utils/LogItem.h"
 #include <ctime>
 #include <cstdint>
 #include <iostream>
@@ -50,6 +52,11 @@ class SymbolManager {
     SymbolId sym_id = 0;
 
     bool is_shortable = true;
+
+    ShmemManager* mShmemManager;
+
+    LogItem newLog;
+
 public:
     
     void gotPrint(const Price& _print_price, const Shares& _print_shares, const Timestamp& _current_time){
@@ -75,9 +82,22 @@ public:
         clock_gettime(CLOCK_REALTIME, &ts);
         uint64_t nanos = uint64_t(ts.tv_sec) * 1000000000ULL + ts.tv_nsec;
 
-        if((nanos % NANOS_PER_DAY) - _current_time > 1500000000)
-            std::cout << "Latency=" << (nanos % NANOS_PER_DAY) - _current_time << 
-            "|CurrentTime=" << _current_time << "\n";
+        if((nanos % NANOS_PER_DAY) - _current_time > 750000000){
+            // std::cout << "Latency=" << (nanos % NANOS_PER_DAY) - _current_time << 
+            // "|CurrentTime=" << _current_time << "\n";
+
+            // char buf[118];
+            // int n = snprintf(buf, sizeof(buf), "Latency=%u|CurrentTime=%u", (nanos % NANOS_PER_DAY) - _current_time, _current_time);
+            // FastLogger::getInstance()->log(tlog->tb, buf);
+
+            newLog.clear();
+
+            newLog.m_type = log_type::MDDELAY;
+            newLog.m_current_time = _current_time;
+            newLog.m_delay = (nanos % NANOS_PER_DAY) - _current_time;
+
+            mShmemManager->pushLog(newLog);
+        }
     }
 
     void gotBid(){;}
@@ -95,9 +115,22 @@ public:
         clock_gettime(CLOCK_REALTIME, &ts);
         uint64_t nanos = uint64_t(ts.tv_sec) * 1000000000ULL + ts.tv_nsec;
 
-        if((nanos % NANOS_PER_DAY) - _current_time > 1500000000)
-            std::cout << "Latency=" << (nanos % NANOS_PER_DAY) - _current_time << 
-            "|CurrentTime=" << _current_time << "\n";
+        if((nanos % NANOS_PER_DAY) - _current_time > 750000000){
+            // std::cout << "Latency=" << (nanos % NANOS_PER_DAY) - _current_time << 
+            // "|CurrentTime=" << _current_time << "\n";
+
+            // char buf[118];
+            // int n = snprintf(buf, sizeof(buf), "Latency=%u|CurrentTime=%u", (nanos % NANOS_PER_DAY) - _current_time, _current_time);
+            // FastLogger::getInstance()->log(tlog->tb, buf);
+
+            newLog.clear();
+
+            newLog.m_type = log_type::MDDELAY;
+            newLog.m_current_time = _current_time;
+            newLog.m_delay = (nanos % NANOS_PER_DAY) - _current_time;
+
+            mShmemManager->pushLog(newLog);
+        }
     }
 
     void gotImbalance(){;}
@@ -184,8 +217,9 @@ public:
         return true;
     }
 
-    void OnInit(const SymbolId& _sym_id, const Timestamp& _market_open, const bool& _is_shortable){
+    void OnInit(const SymbolId& _sym_id, const Timestamp& _market_open, const bool& _is_shortable, ShmemManager* _schmemMan){
         sym_id = _sym_id;
+        mShmemManager = _schmemMan;
         opening_auction = _market_open;
         is_shortable = _is_shortable;
     }
