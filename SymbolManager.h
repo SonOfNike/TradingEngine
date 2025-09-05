@@ -22,10 +22,6 @@ class SymbolManager {
     Price near_price = 0;
     Price far_price = 0;
 
-    // first 15 minute
-    Price first_15_high = 0;
-    Price first_15_low = 0;
-
     //vwap
     Price currentVWAP = 0;
     Price total_exposure = 0;
@@ -65,16 +61,6 @@ public:
         current_time = _current_time;
 
         if(_current_time >= opening_auction){
-            if(_current_time <= opening_auction + 15 * MINUTES){
-                if(first_15_high == 0) 
-                    first_15_high = _print_price;
-                else if(first_15_high < _print_price)
-                    first_15_high = _print_price;
-                if(first_15_low == 0) 
-                    first_15_low = _print_price;
-                else if(first_15_low > _print_price)
-                    first_15_low = _print_price;
-            }
             calculateVWAP(_print_price,_print_shares);
         }
 
@@ -164,14 +150,6 @@ public:
 
     Price getNearPrice(){
         return near_price;
-    }
-
-    Price get15minHigh(){
-        return first_15_high;
-    }
-
-    Price get15minLow(){
-        return first_15_low;
     }
 
     Price getVWAP(){

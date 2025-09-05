@@ -1,5 +1,6 @@
 #include "StrategyManager.h"
 #include "BaseStrategy.h"
+#include "../Strategies/ORBO/ORBOStrategy.h"
 
 void StrategyManager::OnInit(SymbolManager* _sym_man, simdjson::dom::element _symbol){
     for(auto strat : _symbol["strats"])
@@ -7,6 +8,10 @@ void StrategyManager::OnInit(SymbolManager* _sym_man, simdjson::dom::element _sy
         std::string_view value = strat["strat_name"].get_string();
         if(value == "meanRevert"){
             m_strategies.emplace_back(new MeanRevertStrategy);
+            m_strategies[next_strat_id]->onInit(_sym_man, next_strat_id, strat, this);
+        }
+        else if(value == "ORBO"){
+            m_strategies.emplace_back(new ORBOStrategy);
             m_strategies[next_strat_id]->onInit(_sym_man, next_strat_id, strat, this);
         }
 
