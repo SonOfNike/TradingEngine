@@ -36,7 +36,7 @@ void ShmemManager::startUp(){
     }
     close(shm_fd);
 
-    next_md_read_index = md_shmem->next_write_index;
+    next_md_read_index = md_shmem->next_write_index.load(std::memory_order_acquire);
     next_md_read_page = md_shmem->next_write_page;
 
     shm_size = sizeof(ReqShmem);
@@ -98,7 +98,7 @@ void ShmemManager::startUp(){
     }
     close(shm_fd);
 
-    next_resp_read_index = resp_shmem->next_write_index;
+    next_resp_read_index = resp_shmem->next_write_index.load(std::memory_order_acquire);
     next_resp_read_page = resp_shmem->next_write_page;
 }
 
@@ -121,15 +121,13 @@ void ShmemManager::shutDown(){
 }
 
 bool ShmemManager::gotMD(){
-    if(md_shmem->next_write_index == next_md_read_index &&
-       md_shmem->next_write_page == next_md_read_page)
+    if(md_shmem->next_write_index.load(std::memory_order_acquire) == next_md_read_index)
         return false;
     return true;
 }
 
 bool ShmemManager::gotResp(){
-    if(resp_shmem->next_write_index == next_resp_read_index &&
-       resp_shmem->next_write_page == next_resp_read_page)
+    if(resp_shmem->next_write_index.load(std::memory_order_acquire) == next_resp_read_index)
         return false;
     return true;
 }
@@ -154,7 +152,7 @@ void ShmemManager::getResp(Response& newResp){
 
 void ShmemManager::pushReq(const Request& newReq){
     req_shmem->m_queue[req_shmem->next_write_index] = newReq;
-    req_shmem->next_write_index++;
+    req_shmem->next_write_index.fetch_add(1, std::memory_order_release);
     if(req_shmem->next_write_index >= REQ_QUEUE_SIZE){
         req_shmem->next_write_index = 0;
         req_shmem->next_write_page++;
@@ -163,7 +161,7 @@ void ShmemManager::pushReq(const Request& newReq){
 
 void ShmemManager::pushLog(const LogItem& newLog){
     log_shmem->m_queue[log_shmem->next_write_index] = newLog;
-    log_shmem->next_write_index++;
+    log_shmem->next_write_index.fetch_add(1, std::memory_order_release);
     if(log_shmem->next_write_index >= LOG_QUEUE_SIZE){
         log_shmem->next_write_index = 0;
         log_shmem->next_write_page++;

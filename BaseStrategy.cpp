@@ -45,6 +45,7 @@ void BaseStrategy::processRMFill(const side& _side, const Price& _price, const S
     if(_side == side::BUY)
     {
         m_strat_position += _shares;
+        sym_man->m_sym_position += _shares;
         m_exposure -= _price * _shares;
 
         next_log.clear();
@@ -61,6 +62,7 @@ void BaseStrategy::processRMFill(const side& _side, const Price& _price, const S
     else if(_side == side::SELL)
     {
         m_strat_position -= _shares;
+        sym_man->m_sym_position -= _shares;
         m_exposure += _price * _shares;
 
         next_log.clear();

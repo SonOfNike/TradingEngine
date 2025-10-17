@@ -54,6 +54,8 @@ class SymbolManager {
     LogItem newLog;
 
 public:
+
+    Shares m_sym_position = 0;
     
     void gotPrint(const Price& _print_price, const Shares& _print_shares, const Timestamp& _current_time){
         latest_print_price = _print_price;

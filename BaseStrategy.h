@@ -56,6 +56,7 @@ public:
     virtual void cancelOpen() = 0;
     virtual void ordersOut() = 0;
     virtual void covering() = 0;
+    virtual void finished_check() = 0;
     virtual void onInit(SymbolManager* _sym_man, SymbolId _strat_id, simdjson::dom::element _strat, StrategyManager* _strat_man) = 0;
 
     void setState(BaseState* new_state){

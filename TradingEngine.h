@@ -12,6 +12,8 @@
 #include "../Utils/Timeout.h"
 #include "../Utils/SymbolIDManager.h"
 #include <vector>
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include "../Utils/httplib.h"
 
 class TradingEngine {
     // singletons
@@ -27,6 +29,9 @@ class TradingEngine {
     Timeout     currentTimeout;
     Timestamp   currentTime = 0;
 
+    std::string api_key_id_;
+    std::string api_secret_key_;
+
     std::vector<StrategyManager*> m_strat_managers;
     std::vector<SymbolManager*> m_symbol_managers;
 
@@ -39,4 +44,6 @@ public:
     void processMD();
     void processResp();
     void processTimeout();
+    httplib::Headers headers();
+    bool getEasyToBorrow(const std::string& symbol);
 };
