@@ -100,6 +100,28 @@ void ShmemManager::startUp(){
 
     next_resp_read_index = resp_shmem->next_write_index.load(std::memory_order_acquire);
     next_resp_read_page = resp_shmem->next_write_page;
+
+    shm_size = sizeof(ErrorShmem);
+    // Create or open the shared memory object
+    shm_fd = shm_open(ERROR_shm_name, O_RDWR, 0666);
+    if (shm_fd == -1) {
+        perror("shm_open");
+    }
+
+    // Configure the size of the shared memory object
+    if (ftruncate(shm_fd, shm_size) == -1) {
+        perror("ftruncate");
+    }
+
+    // Map the shared memory object into the process's address space
+    error_shmem = (ErrorShmem*)mmap(0, shm_size, PROT_READ, MAP_SHARED, shm_fd, 0);
+    if (md_shmem == MAP_FAILED) {
+        perror("mmap");
+    }
+    close(shm_fd);
+
+    next_error_read_index = error_shmem->next_write_index.load(std::memory_order_acquire);
+    next_error_read_page = error_shmem->next_write_page;
 }
 
 void ShmemManager::shutDown(){
@@ -118,6 +140,10 @@ void ShmemManager::shutDown(){
     if (munmap(resp_shmem, sizeof(RespShmem)) == -1) {
         perror("munmap");
     }
+
+    if (munmap(error_shmem, sizeof(ErrorShmem)) == -1) {
+        perror("munmap");
+    }
 }
 
 bool ShmemManager::gotMD(){
@@ -128,6 +154,12 @@ bool ShmemManager::gotMD(){
 
 bool ShmemManager::gotResp(){
     if(resp_shmem->next_write_index.load(std::memory_order_acquire) == next_resp_read_index)
+        return false;
+    return true;
+}
+
+bool ShmemManager::gotError(){
+    if(error_shmem->next_write_index.load(std::memory_order_acquire) == next_error_read_index)
         return false;
     return true;
 }
@@ -147,6 +179,15 @@ void ShmemManager::getResp(Response& newResp){
     if(next_resp_read_index >= RESP_QUEUE_SIZE){
         next_resp_read_index = 0;
         next_resp_read_page++;
+    }
+}
+
+void ShmemManager::getError(Response& newResp){
+    newResp = error_shmem->m_queue[next_error_read_index];
+    next_error_read_index++;
+    if(next_error_read_index >= ERROR_QUEUE_SIZE){
+        next_error_read_index = 0;
+        next_error_read_page++;
     }
 }
 

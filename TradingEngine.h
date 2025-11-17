@@ -43,6 +43,7 @@ public:
     void run();
     void processMD();
     void processResp();
+    void processOrderError();
     void processTimeout();
     httplib::Headers headers();
     bool getEasyToBorrow(const std::string& symbol);

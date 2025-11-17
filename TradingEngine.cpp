@@ -79,6 +79,9 @@ void TradingEngine::run(){
         if(mShmemManager->gotResp()){
             processResp();
         }
+        else if(mShmemManager->gotError()){
+            processOrderError();
+        }
         else if(mTimeManager->gotTimeout(currentTime)){
             processTimeout();
         }
@@ -90,6 +93,11 @@ void TradingEngine::run(){
 
 void TradingEngine::processResp(){
     mShmemManager->getResp(currentResp);
+    m_strat_managers[currentResp.m_symbolId]->processResp(currentResp);
+}
+
+void TradingEngine::processOrderError(){
+    mShmemManager->getError(currentResp);
     m_strat_managers[currentResp.m_symbolId]->processResp(currentResp);
 }
 
