@@ -23,8 +23,9 @@ class SymbolManager {
     Price far_price = 0;
 
     //vwap
-    Price currentVWAP = 0;
-    Price total_exposure = 0;
+    int64_t currentVWAP = 0;
+    int64_t total_exposure = 0;
+    int64_t total_shares = 0;
 
     // Timestamp data
     Timestamp opening_auction = 0;
@@ -37,9 +38,6 @@ class SymbolManager {
     // quote data
     Shares bid_quant = 0;
     Shares ask_quant = 0;
-
-    //vwap
-    Shares total_shares = 0;
 
     // imbalance data
     Shares imbalance_quant = 0;
@@ -71,12 +69,6 @@ public:
         uint64_t nanos = uint64_t(ts.tv_sec) * 1000000000ULL + ts.tv_nsec;
 
         if((nanos % NANOS_PER_DAY) - _current_time > 750000000){
-            // std::cout << "Latency=" << (nanos % NANOS_PER_DAY) - _current_time << 
-            // "|CurrentTime=" << _current_time << "\n";
-
-            // char buf[118];
-            // int n = snprintf(buf, sizeof(buf), "Latency=%u|CurrentTime=%u", (nanos % NANOS_PER_DAY) - _current_time, _current_time);
-            // FastLogger::getInstance()->log(tlog->tb, buf);
 
             newLog.clear();
 
@@ -104,12 +96,6 @@ public:
         uint64_t nanos = uint64_t(ts.tv_sec) * 1000000000ULL + ts.tv_nsec;
 
         if((nanos % NANOS_PER_DAY) - _current_time > 750000000){
-            // std::cout << "Latency=" << (nanos % NANOS_PER_DAY) - _current_time << 
-            // "|CurrentTime=" << _current_time << "\n";
-
-            // char buf[118];
-            // int n = snprintf(buf, sizeof(buf), "Latency=%u|CurrentTime=%u", (nanos % NANOS_PER_DAY) - _current_time, _current_time);
-            // FastLogger::getInstance()->log(tlog->tb, buf);
 
             newLog.clear();
 
@@ -213,8 +199,8 @@ public:
     }
 
     void calculateVWAP(const Price& _print_price, const Shares& _print_shares){
-        total_exposure += _print_price * _print_shares;
-        total_shares += _print_shares;
+        total_exposure += _print_price * int64_t(_print_shares);
+        total_shares += int64_t(_print_shares);
         currentVWAP = total_exposure / total_shares;
     }
 };
