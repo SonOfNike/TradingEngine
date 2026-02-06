@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BaseState.h"
+// #include "BaseState.h"
 #include "SymbolManager.h"
 #include "ShmemManager.h"
 #include "TimeManager.h"
@@ -13,9 +13,13 @@
 
 class StrategyManager;
 
+enum class State {StartingState, WaitForTriggerState, OrdersOutState, CancelOpenState, FinishedState, CoveringState};
+
 class BaseStrategy{
 public:
-    BaseState* current_state;
+
+    State current_state;
+    // BaseState* current_state;
     SymbolManager* sym_man;
     StrategyManager* strat_man;
     ShmemManager* mShmemManager;
@@ -42,11 +46,38 @@ public:
         mTimeManager = TimeManager::getInstance();
     }
 
-    virtual void run(){current_state->run();}
-    virtual void gotPrint(){current_state->gotPrint();}
-    virtual void gotQuote(){current_state->gotQuote();}
-    virtual void gotImbalance(){current_state->gotImbalance();}
-    virtual void gotTimeout(){current_state->gotTimeout();}
+    // virtual void run(){current_state->run();}
+    // virtual void gotPrint(){current_state->gotPrint();}
+    // virtual void gotQuote(){current_state->gotQuote();}
+    // virtual void gotImbalance(){current_state->gotImbalance();}
+    // virtual void gotTimeout(){current_state->gotTimeout();}
+
+    virtual void run(){
+        switch (current_state){
+            case State::StartingState:
+                ready_to_start();
+                break;
+            case State::WaitForTriggerState:
+                triggerCheck();
+                break;
+            case State::OrdersOutState:
+                ordersOut();
+                break;
+            case State::CancelOpenState:
+                cancelOpen();
+                break;
+            case State::CoveringState:
+                covering();
+                break;
+            case State::FinishedState:
+                finished_check();
+                break;
+        }
+    }
+    virtual void gotPrint(){run();}
+    virtual void gotQuote(){run();}
+    virtual void gotImbalance(){run();}
+    virtual void gotTimeout(){run();}
 
     virtual void gotResp(const Response& _new_response) = 0;
 
@@ -59,7 +90,11 @@ public:
     virtual void finished_check() = 0;
     virtual void onInit(SymbolManager* _sym_man, SymbolId _strat_id, simdjson::dom::element _strat, StrategyManager* _strat_man) = 0;
 
-    void setState(BaseState* new_state){
+    // void setState(BaseState* new_state){
+    //     current_state = new_state;
+    // }
+
+    void setState(const State& new_state){
         current_state = new_state;
     }
 
