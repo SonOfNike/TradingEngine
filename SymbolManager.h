@@ -10,7 +10,11 @@
 
 class SymbolManager {
 
-    const uint64_t NANOS_PER_DAY = 24ULL * 60 * 60 *1000000000ULL;
+    // const uint64_t NANOS_PER_DAY = 24ULL * 60 * 60 *1000000000ULL;
+
+    ShmemManager* mShmemManager;
+
+    LogItem newLog;
     // price data
     Price latest_print_price = 0;
 
@@ -19,13 +23,13 @@ class SymbolManager {
     Price ask_price = 0;
 
     // imbalance data
-    Price near_price = 0;
-    Price far_price = 0;
+    Price clear_price = 0;
+    // Price far_price = 0;
 
     //vwap
-    int64_t currentVWAP = 0;
-    int64_t total_exposure = 0;
-    int64_t total_shares = 0;
+    // int64_t currentVWAP = 0;
+    // int64_t total_exposure = 0;
+    // int64_t total_shares = 0;
 
     // Timestamp data
     Timestamp opening_auction = 0;
@@ -36,20 +40,16 @@ class SymbolManager {
     Shares latest_print_quant = 0;
 
     // quote data
-    Shares bid_quant = 0;
-    Shares ask_quant = 0;
+    // Shares bid_quant = 0;
+    // Shares ask_quant = 0;
 
     // imbalance data
-    Shares imbalance_quant = 0;
+    Shares imb_shares = 0;
     Shares paired_shares = 0;
 
     SymbolId sym_id = 0;
 
     bool is_shortable = true;
-
-    ShmemManager* mShmemManager;
-
-    LogItem newLog;
 
 public:
 
@@ -59,25 +59,42 @@ public:
         latest_print_price = _print_price;
         latest_print_quant = _print_shares;
         current_time = _current_time;
+    }
 
-        if(_current_time >= opening_auction){
-            calculateVWAP(_print_price,_print_shares);
-        }
+    void gotNYSEOpen(const Price& _print_price, const Shares& _print_shares, const Price& _ask_price, const Shares& _ask_shares, const Timestamp& _current_time){
+        latest_print_price = _print_price;
+        latest_print_quant = _print_shares;
+        current_time = _current_time;
 
-        timespec ts;
-        clock_gettime(CLOCK_REALTIME, &ts);
-        uint64_t nanos = uint64_t(ts.tv_sec) * 1000000000ULL + ts.tv_nsec;
+        newLog.clear();
 
-        if((nanos % NANOS_PER_DAY) - _current_time > 750000000){
+        newLog.m_type = log_type::NYSEOPEN;
+        newLog.m_current_time = _current_time;
+        newLog.m_symbolId = sym_id;
+        newLog.m_shares = _print_shares;
+        newLog.m_price = _print_price;
+        newLog.m_stratID = _ask_price;
+        newLog.m_delay = _ask_shares;
 
-            newLog.clear();
+        mShmemManager->pushLog(newLog);
+    }
 
-            newLog.m_type = log_type::MDDELAY;
-            newLog.m_current_time = _current_time;
-            newLog.m_delay = (nanos % NANOS_PER_DAY) - _current_time;
+    void gotNASDOpen(const Price& _print_price, const Shares& _print_shares, const Price& _ask_price, const Shares& _ask_shares, const Timestamp& _current_time){
+        latest_print_price = _print_price;
+        latest_print_quant = _print_shares;
+        current_time = _current_time;
 
-            mShmemManager->pushLog(newLog);
-        }
+        newLog.clear();
+
+        newLog.m_type = log_type::NASDOPEN;
+        newLog.m_current_time = _current_time;
+        newLog.m_symbolId = sym_id;
+        newLog.m_shares = _print_shares;
+        newLog.m_price = _print_price;
+        newLog.m_stratID = _ask_price;
+        newLog.m_delay = _ask_shares;
+
+        mShmemManager->pushLog(newLog);
     }
 
     void gotBid(){;}
@@ -86,28 +103,32 @@ public:
 
     void gotQuote(const Price& _bid_price, const Shares& _bid_shares, const Price& _ask_price, const Shares& _ask_shares, const Timestamp& _current_time){
         bid_price = _bid_price;
-        bid_quant = _bid_shares;
+        // bid_quant = _bid_shares;
         ask_price = _ask_price;
-        ask_quant = _ask_shares;
+        // ask_quant = _ask_shares;
         current_time = _current_time;
 
-        timespec ts;
-        clock_gettime(CLOCK_REALTIME, &ts);
-        uint64_t nanos = uint64_t(ts.tv_sec) * 1000000000ULL + ts.tv_nsec;
+        // timespec ts;
+        // clock_gettime(CLOCK_REALTIME, &ts);
+        // uint64_t nanos = uint64_t(ts.tv_sec) * 1000000000ULL + ts.tv_nsec;
 
-        if((nanos % NANOS_PER_DAY) - _current_time > 750000000){
+        // if((nanos % NANOS_PER_DAY) - _current_time > 750000000){
 
-            newLog.clear();
+        //     newLog.clear();
 
-            newLog.m_type = log_type::MDDELAY;
-            newLog.m_current_time = _current_time;
-            newLog.m_delay = (nanos % NANOS_PER_DAY) - _current_time;
+        //     newLog.m_type = log_type::MDDELAY;
+        //     newLog.m_current_time = _current_time;
+        //     newLog.m_delay = (nanos % NANOS_PER_DAY) - _current_time;
 
-            mShmemManager->pushLog(newLog);
-        }
+        //     mShmemManager->pushLog(newLog);
+        // }
     }
 
-    void gotImbalance(){;}
+    void gotImbalance(const Price& _clear_price, const Shares& _imb_shares, const Shares& _paired_shares, const Timestamp& _current_time){
+        clear_price = _clear_price;
+        imb_shares = _imb_shares;
+        paired_shares = _paired_shares;
+    }
 
     Price getLatestPrintPrice(){
         return latest_print_price;
@@ -125,43 +146,43 @@ public:
         return (bid_price + ask_price) / 2;
     }
 
-    Price getSpread(){
-        Price spread = ask_price - bid_price;
-        if(spread < 0)
-            return 0;
-        return spread;
+    // Price getSpread(){
+    //     Price spread = ask_price - bid_price;
+    //     if(spread < 0)
+    //         return 0;
+    //     return spread;
+    // }
+
+    Price getImbPrice(){
+        return clear_price;
     }
 
-    Price getFarPrice(){
-        return far_price;
-    }
+    // Price getNearPrice(){
+    //     return near_price;
+    // }
 
-    Price getNearPrice(){
-        return near_price;
-    }
-
-    Price getVWAP(){
-        return currentVWAP;
-    }
+    // Price getVWAP(){
+    //     return currentVWAP;
+    // }
 
     Shares getLatestPrintQuant(){
         return latest_print_quant;
     }
 
-    Shares getBidQuant(){
-        return bid_quant;
-    }
+    // Shares getBidQuant(){
+    //     return bid_quant;
+    // }
 
-    Shares getAskQuant(){
-        return ask_quant;
-    }
+    // Shares getAskQuant(){
+    //     return ask_quant;
+    // }
 
     Shares getPairedShares(){
         return paired_shares;
     }
 
     Shares getImbalanceQuant(){
-        return imbalance_quant;
+        return imb_shares;
     }
 
     Timestamp getCurrentTime(){
@@ -198,9 +219,18 @@ public:
         return is_shortable;
     }
 
-    void calculateVWAP(const Price& _print_price, const Shares& _print_shares){
-        total_exposure += _print_price * int64_t(_print_shares);
-        total_shares += int64_t(_print_shares);
-        currentVWAP = total_exposure / total_shares;
+    void processResp(const Response& currentResp){
+        if(currentResp.m_resp_quant == 1)
+            is_shortable = true;
+        else if(currentResp.m_resp_quant == 1)
+            is_shortable = false;
+        else
+            is_shortable = false;
     }
+
+    // void calculateVWAP(const Price& _print_price, const Shares& _print_shares){
+    //     total_exposure += _print_price * int64_t(_print_shares);
+    //     total_shares += int64_t(_print_shares);
+    //     currentVWAP = total_exposure / total_shares;
+    // }
 };

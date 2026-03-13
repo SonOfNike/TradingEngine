@@ -18,13 +18,13 @@ public:
     void gotImbalance();
     void gotTimeout(const SymbolId& strat_id);
 
-    void trackOrder(const OrderId& _order_id, const SymbolId& _strat_id);
+    void trackOrder(const MyOrderId& _order_id, const SymbolId& _strat_id);
 
     void processResp(const Response& _new_response);
 
 private:
-    std::vector<BaseStrategy*> m_strategies;
+    std::vector<Strategy<MeanRevertStrategy>> m_strategies;
     SymbolId next_strat_id = 0;
 
-    std::unordered_map<OrderId , SymbolId> id_to_strat_id;
+    std::unordered_map<MyOrderId , SymbolId> id_to_strat_id;
 };

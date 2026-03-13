@@ -2,8 +2,8 @@
 
 #include "ShmemManager.h"
 #include "RMManager.h"
-#include "LogManager.h"
-#include "ConfManager.h"
+// #include "LogManager.h"
+// #include "ConfManager.h"
 #include "SymbolManager.h"
 #include "TimeManager.h"
 #include "StrategyManager.h"
@@ -17,9 +17,9 @@
 
 class TradingEngine {
     // singletons
-    LogManager* mLogManager;
+    // LogManager* mLogManager;
     RMManager* mRMManager;
-    ConfManager* mConfManager;
+    // ConfManager* mConfManager;
     ShmemManager* mShmemManager;
     SymbolIDManager* mSymIDManager;
     TimeManager* mTimeManager;
@@ -32,8 +32,8 @@ class TradingEngine {
     std::string api_key_id_;
     std::string api_secret_key_;
 
-    std::vector<StrategyManager*> m_strat_managers;
-    std::vector<SymbolManager*> m_symbol_managers;
+    std::vector<StrategyManager> m_strat_managers;
+    std::vector<SymbolManager> m_symbol_managers;
 
 public:
     TradingEngine(){;}

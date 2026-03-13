@@ -25,8 +25,8 @@ void TradingEngine::startUp(){
     doc = parser.load("/home/git_repos/Utils/symbols.json");
     for(auto symbol : doc["symbols"])
     {
-        m_symbol_managers.emplace_back(new SymbolManager);
-        m_strat_managers.emplace_back(new StrategyManager);
+        m_symbol_managers.emplace_back(SymbolManager());
+        m_strat_managers.emplace_back(StrategyManager());
     }
 
     doc = parser.load("/home/git_repos/FinvizData/output.json");
@@ -43,8 +43,10 @@ void TradingEngine::startUp(){
         bool easy_to_borrow = getEasyToBorrow(s_copy);
 
         SymbolId next_sym_id = mSymIDManager->getID(field.key);
-        m_symbol_managers[next_sym_id]->OnInit(next_sym_id, open_time, easy_to_borrow, mShmemManager);
-        m_strat_managers[next_sym_id]->OnInit(m_symbol_managers[next_sym_id],doc["symbols"][field.key]);
+        m_symbol_managers[next_sym_id].OnInit(next_sym_id, open_time, easy_to_borrow, mShmemManager);
+        //Get ETB from output file
+        // m_symbol_managers[next_sym_id].OnInit(next_sym_id, open_time, doc["symbols"][field.key]["etb"].get_bool(), mShmemManager);
+        m_strat_managers[next_sym_id].OnInit(&m_symbol_managers[next_sym_id],doc["symbols"][field.key]);
 
         // if(easy_to_borrow)
         //     std::cout << field.key << " easy to borrow" << std::endl;
@@ -93,31 +95,43 @@ void TradingEngine::run(){
 
 void TradingEngine::processResp(){
     mShmemManager->getResp(currentResp);
-    m_strat_managers[currentResp.m_symbolId]->processResp(currentResp);
+    m_strat_managers[currentResp.m_symbolId].processResp(currentResp);
 }
 
 void TradingEngine::processOrderError(){
     mShmemManager->getError(currentResp);
-    m_strat_managers[currentResp.m_symbolId]->processResp(currentResp);
+    m_strat_managers[currentResp.m_symbolId].processResp(currentResp);
 }
 
 void TradingEngine::processMD(){
     mShmemManager->getMD(currentMD);
-    if(currentMD.m_type == md_type::PRINT){
-        m_symbol_managers[currentMD.m_symbolId]->gotPrint(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_timestamp);
-        m_strat_managers[currentMD.m_symbolId]->gotPrint();
-    }
-    else if(currentMD.m_type == md_type::QUOTE){
-        m_symbol_managers[currentMD.m_symbolId]->gotQuote(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_ask_price, currentMD.m_ask_quant, currentMD.m_timestamp);
+    if(currentMD.m_type == md_type::QUOTE){
+        m_symbol_managers[currentMD.m_symbolId].gotQuote(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_ask_price, currentMD.m_ask_quant, currentMD.m_timestamp);
         // m_strat_managers[currentMD.m_symbolId]->gotQuote();
+    }
+    else if(currentMD.m_type == md_type::PRINT){
+        m_symbol_managers[currentMD.m_symbolId].gotPrint(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_timestamp);
+        m_strat_managers[currentMD.m_symbolId].gotPrint();
+    }
+    else if(currentMD.m_type == md_type::NYSEOPEN){
+        m_symbol_managers[currentMD.m_symbolId].gotNYSEOpen(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_ask_price, currentMD.m_ask_quant, currentMD.m_timestamp);
+        m_strat_managers[currentMD.m_symbolId].gotPrint();
+    }
+    else if(currentMD.m_type == md_type::NASDOPEN){
+        m_symbol_managers[currentMD.m_symbolId].gotNASDOpen(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_ask_price, currentMD.m_ask_quant, currentMD.m_timestamp);
+        m_strat_managers[currentMD.m_symbolId].gotPrint();
+    }
+    else if(currentMD.m_type == md_type::IMBALANCE){
+        m_symbol_managers[currentMD.m_symbolId].gotImbalance(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_ask_quant, currentMD.m_timestamp);
+        m_strat_managers[currentMD.m_symbolId].gotImbalance();
     }
     currentTime = currentMD.m_timestamp;
 }
 
 void TradingEngine::processTimeout(){
     mTimeManager->getTimeout(currentTimeout);
-    m_symbol_managers[currentTimeout.m_sym_id]->setCurrentTime(currentTime);
-    m_strat_managers[currentTimeout.m_sym_id]->gotTimeout(currentTimeout.m_strat_id);
+    // m_symbol_managers[currentTimeout.m_sym_id].setCurrentTime(currentTime);
+    m_strat_managers[currentTimeout.m_sym_id].gotTimeout(currentTimeout.m_strat_id);
 }
 
 bool TradingEngine::getEasyToBorrow(const std::string& symbol) {

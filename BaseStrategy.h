@@ -13,13 +13,10 @@
 
 class StrategyManager;
 
-enum class State {StartingState, WaitForTriggerState, OrdersOutState, CancelOpenState, FinishedState, CoveringState};
+enum class StratState {StartingState, WaitForTriggerState, OrdersOutState, CancelOpenState, CoveringState, FinishedState};
 
 class BaseStrategy{
 public:
-
-    State current_state;
-    // BaseState* current_state;
     SymbolManager* sym_man;
     StrategyManager* strat_man;
     ShmemManager* mShmemManager;
@@ -27,14 +24,19 @@ public:
     RMManager* mRMManager;
     TimeManager* mTimeManager;
 
-    SymbolId m_strat_id = 0;
-
-    Shares m_strat_position = 0;
     Price m_exposure = 0;
     Price m_pnl = 0;
 
     Request next_req;
     LogItem next_log;
+
+    OrderItem pcover_order;
+
+    Shares m_strat_position = 0;
+
+    SymbolId m_strat_id = 0;
+
+    StratState current_state = StratState::StartingState;
 
     void onInit(SymbolManager* _sym_man, SymbolId _strat_id, StrategyManager* _strat_man){
         sym_man = _sym_man;
@@ -46,55 +48,7 @@ public:
         mTimeManager = TimeManager::getInstance();
     }
 
-    // virtual void run(){current_state->run();}
-    // virtual void gotPrint(){current_state->gotPrint();}
-    // virtual void gotQuote(){current_state->gotQuote();}
-    // virtual void gotImbalance(){current_state->gotImbalance();}
-    // virtual void gotTimeout(){current_state->gotTimeout();}
-
-    virtual void run(){
-        switch (current_state){
-            case State::StartingState:
-                ready_to_start();
-                break;
-            case State::WaitForTriggerState:
-                triggerCheck();
-                break;
-            case State::OrdersOutState:
-                ordersOut();
-                break;
-            case State::CancelOpenState:
-                cancelOpen();
-                break;
-            case State::CoveringState:
-                covering();
-                break;
-            case State::FinishedState:
-                finished_check();
-                break;
-        }
-    }
-    virtual void gotPrint(){run();}
-    virtual void gotQuote(){run();}
-    virtual void gotImbalance(){run();}
-    virtual void gotTimeout(){run();}
-
-    virtual void gotResp(const Response& _new_response) = 0;
-
-    virtual void logParams() = 0;
-    virtual void ready_to_start() = 0;
-    virtual void triggerCheck() = 0;
-    virtual void cancelOpen() = 0;
-    virtual void ordersOut() = 0;
-    virtual void covering() = 0;
-    virtual void finished_check() = 0;
-    virtual void onInit(SymbolManager* _sym_man, SymbolId _strat_id, simdjson::dom::element _strat, StrategyManager* _strat_man) = 0;
-
-    // void setState(BaseState* new_state){
-    //     current_state = new_state;
-    // }
-
-    void setState(const State& new_state){
+    void setState(StratState new_state){
         current_state = new_state;
     }
 
@@ -102,9 +56,76 @@ public:
 
     void sendOrder(OrderItem& _order_item);
 
+    void modOrder(OrderItem& _order_item);
+
     void sendCancel(OrderItem& _order_item);
 
     void setTimeout(const Timestamp& _time);
 
     void processRMFill(const side& _side, const Price& _price, const Shares& _shares);
+
+    //passive cover
+    void passiveCover();
+
+    bool pcoverOrderCanceled();
+
+    void cancelPCover();
+
+    void sendPCover();
+
+    MyOrderId getPCoverOrderID();
+};
+
+
+template <typename Strat>
+class Strategy{
+    Strat s;
+public:
+    void onInit(SymbolManager* _sym_man, SymbolId _strat_id, simdjson::dom::element _strat, StrategyManager* _strat_man){
+        s.onInit(_sym_man, _strat_id, _strat, _strat_man);
+    }
+
+    void run(){
+        switch (s.current_state){
+            case StratState::StartingState:
+                s.ready_to_start();
+                break;
+            case StratState::WaitForTriggerState:
+                s.triggerCheck();
+                break;
+            case StratState::OrdersOutState:
+                s.ordersOut();
+                break;
+            case StratState::CancelOpenState:
+                s.cancelOpen();
+                break;
+            case StratState::CoveringState:
+                s.covering();
+                break;
+            case StratState::FinishedState:
+                s.finished_check();
+                break;
+        }
+    }
+    void gotPrint(){
+        s.gotPrint();    
+        run();
+    }
+    void gotQuote(){
+        s.gotQuote();
+        run();
+    }
+    void gotImbalance(){
+        s.gotImbalance();    
+        run();
+    }
+    void gotTimeout(){
+        s.gotTimeout();
+        run();
+    }
+
+    void processResp(const Response& _new_response){
+        s.processResp(_new_response);
+        s.gotResp(_new_response);
+    }
 };

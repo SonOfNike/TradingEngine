@@ -37,7 +37,7 @@ void ShmemManager::startUp(){
     close(shm_fd);
 
     next_md_read_index = md_shmem->next_write_index.load(std::memory_order_acquire);
-    next_md_read_page = md_shmem->next_write_page;
+    // next_md_read_page = md_shmem->next_write_page;
 
     shm_size = sizeof(ReqShmem);
 
@@ -99,7 +99,7 @@ void ShmemManager::startUp(){
     close(shm_fd);
 
     next_resp_read_index = resp_shmem->next_write_index.load(std::memory_order_acquire);
-    next_resp_read_page = resp_shmem->next_write_page;
+    // next_resp_read_page = resp_shmem->next_write_page;
 
     shm_size = sizeof(ErrorShmem);
     // Create or open the shared memory object
@@ -121,7 +121,7 @@ void ShmemManager::startUp(){
     close(shm_fd);
 
     next_error_read_index = error_shmem->next_write_index.load(std::memory_order_acquire);
-    next_error_read_page = error_shmem->next_write_page;
+    // next_error_read_page = error_shmem->next_write_page;
 }
 
 void ShmemManager::shutDown(){
@@ -169,7 +169,7 @@ void ShmemManager::getMD(MDupdate& newMD){
     next_md_read_index++;
     if(next_md_read_index >= MD_QUEUE_SIZE){
         next_md_read_index = 0;
-        next_md_read_page++;
+        // next_md_read_page++;
     }
 }
 
@@ -178,7 +178,7 @@ void ShmemManager::getResp(Response& newResp){
     next_resp_read_index++;
     if(next_resp_read_index >= RESP_QUEUE_SIZE){
         next_resp_read_index = 0;
-        next_resp_read_page++;
+        // next_resp_read_page++;
     }
 }
 
@@ -187,7 +187,7 @@ void ShmemManager::getError(Response& newResp){
     next_error_read_index++;
     if(next_error_read_index >= ERROR_QUEUE_SIZE){
         next_error_read_index = 0;
-        next_error_read_page++;
+        // next_error_read_page++;
     }
 }
 
@@ -209,7 +209,7 @@ void ShmemManager::pushLog(const LogItem& newLog){
     }
 }
 
-OrderId ShmemManager::getNextOrderID(){
+MyOrderId ShmemManager::getNextOrderID(){
     req_shmem->next_order_id++;
     return req_shmem->next_order_id;
 }

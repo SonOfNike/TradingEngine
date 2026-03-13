@@ -12,19 +12,20 @@
 
 class ShmemManager {
 private:
+    static ShmemManager* uniqueInstance;
+
     MDShmem* md_shmem = nullptr;
-    int32_t next_md_read_index = 0;
-    int32_t next_md_read_page = 0;
     ReqShmem* req_shmem = nullptr;
     LogShmem* log_shmem = nullptr;
     RespShmem* resp_shmem = nullptr;
-    int32_t next_resp_read_index = 0;
-    int32_t next_resp_read_page = 0;
     ErrorShmem* error_shmem = nullptr;
+    int32_t next_md_read_index = 0;
+    // int32_t next_md_read_page = 0;
     int32_t next_error_read_index = 0;
-    int32_t next_error_read_page = 0;
+    // int32_t next_error_read_page = 0;
+    int32_t next_resp_read_index = 0;
+    // int32_t next_resp_read_page = 0;
 
-    static ShmemManager* uniqueInstance;
     ShmemManager(){;}
 
 public:
@@ -39,5 +40,5 @@ public:
     void getError(Response& newResp);
     void pushReq(const Request& newReq);
     void pushLog(const LogItem& newLog);
-    OrderId getNextOrderID();
+    MyOrderId getNextOrderID();
 };
