@@ -42,7 +42,11 @@ void ShmemManager::startUp(){
     shm_size = sizeof(ReqShmem);
 
     // Create or open the shared memory object
-    shm_fd = shm_open(REQ_shm_name, O_RDWR, 0666);
+    //Alpaca
+    // shm_fd = shm_open(REQ_shm_name, O_RDWR, 0666);
+
+    //IB
+    shm_fd = shm_open(IBREQ_shm_name, O_RDWR, 0666);
     if (shm_fd == -1) {
         perror("shm_open");
     }
@@ -62,7 +66,11 @@ void ShmemManager::startUp(){
     shm_size = sizeof(LogShmem);
 
     // Create or open the shared memory object
-    shm_fd = shm_open(LOG_shm_name, O_RDWR, 0666);
+    //Alpaca
+    // shm_fd = shm_open(LOG_shm_name, O_RDWR, 0666);
+
+    //IB
+    shm_fd = shm_open(IBLOG_shm_name, O_RDWR, 0666);
     if (shm_fd == -1) {
         perror("shm_open");
     }
@@ -81,7 +89,11 @@ void ShmemManager::startUp(){
 
     shm_size = sizeof(RespShmem);
     // Create or open the shared memory object
-    shm_fd = shm_open(RESP_shm_name, O_RDWR, 0666);
+    //Alpaca
+    // shm_fd = shm_open(RESP_shm_name, O_RDWR, 0666);
+
+    //IB
+    shm_fd = shm_open(IBRESP_shm_name, O_RDWR, 0666);
     if (shm_fd == -1) {
         perror("shm_open");
     }
@@ -103,7 +115,11 @@ void ShmemManager::startUp(){
 
     shm_size = sizeof(ErrorShmem);
     // Create or open the shared memory object
-    shm_fd = shm_open(ERROR_shm_name, O_RDWR, 0666);
+    //Alpaca
+    // shm_fd = shm_open(ERROR_shm_name, O_RDWR, 0666);
+
+    //IB
+    shm_fd = shm_open(IBERROR_shm_name, O_RDWR, 0666);
     if (shm_fd == -1) {
         perror("shm_open");
     }

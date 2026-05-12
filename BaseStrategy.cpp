@@ -32,10 +32,8 @@ void BaseStrategy::modOrder(OrderItem& _order_item){
     next_req.m_order_type = _order_item.m_type;
     mShmemManager->pushReq(next_req);
 
-    _order_item.m_id = next_req.m_order_id;
     _order_item.m_timestamp = sym_man->getCurrentTime();
     _order_item.m_state = order_state::PENDING_MODIFY;
-    strat_man->trackOrder(next_req.m_order_id, m_strat_id);
 }
 
 void BaseStrategy::sendCancel(OrderItem& _order_item){
@@ -109,17 +107,27 @@ void BaseStrategy::setTimeout(const Timestamp& _time){
     mTimeManager->addTimeout(_time, sym_man->getSymbolID(), m_strat_id);
 }
 
-void BaseStrategy::passiveCover(){
+void BaseStrategy::passiveCover(bool _use_midpoint){
     if(pcover_order.m_state == order_state::NONE){ 
-        sendPCover();
+        sendPCover(_use_midpoint);
         return;
     }
 
-    if(m_strat_position > 0){
-        if(sym_man->getAskPrice() < pcover_order.m_order_price) cancelPCover();
+    if(_use_midpoint){
+        if(m_strat_position > 0){
+            if(sym_man->getMidPoint() < pcover_order.m_order_price) cancelPCover();
+        }
+        else if(m_strat_position < 0){
+            if(sym_man->getMidPoint() > pcover_order.m_order_price) cancelPCover();
+        }
     }
-    else if(m_strat_position < 0){
-        if(sym_man->getBidPrice() > pcover_order.m_order_price) cancelPCover();
+    else{
+        if(m_strat_position > 0){
+            if(sym_man->getAskPrice() < pcover_order.m_order_price) cancelPCover();
+        }
+        else if(m_strat_position < 0){
+            if(sym_man->getBidPrice() > pcover_order.m_order_price) cancelPCover();
+        }
     }
 }
 
@@ -132,22 +140,34 @@ void BaseStrategy::cancelPCover(){
     if(pcover_order.m_state == order_state::CONFIRMED) sendCancel(pcover_order);
 }
 
-void BaseStrategy::sendPCover(){
+void BaseStrategy::sendPCover(bool _use_midpoint){
     pcover_order.m_order_quant = abs(m_strat_position);
     if(pcover_order.m_order_quant > 500) pcover_order.m_order_quant = 500;
 
     if(m_strat_position > 0){
         pcover_order.m_side = side::SELL;
-        pcover_order.m_order_price = sym_man->getAskPrice();
+        pcover_order.m_order_price = sym_man->getAskPrice() - CENTS;
     }
     else if(m_strat_position < 0){
         pcover_order.m_side = side::BUY;
-        pcover_order.m_order_price = sym_man->getBidPrice();
+        pcover_order.m_order_price = sym_man->getBidPrice() + CENTS;
+    }
+
+    if(_use_midpoint){
+        pcover_order.m_order_price = sym_man->getMidPoint();
+        if(pcover_order.m_order_price % CENTS == 50){
+            if(m_strat_position > 0){
+                pcover_order.m_order_price -= 50;
+            }
+            else if(m_strat_position < 0){
+                pcover_order.m_order_price += 50;
+            }
+        }
     }
     
     if(pcover_order.m_order_quant == 0) return;
 
-    pcover_order.m_type = order_type::HIDDENNASD;
+    pcover_order.m_type = order_type::HIDDENSMART;
 
     sendOrder(pcover_order);
 }

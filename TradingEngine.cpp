@@ -3,9 +3,7 @@
 #include "../Utils/simdjson/simdjson.h"
 
 void TradingEngine::startUp(){
-    // mLogManager = new LogManager();
     mRMManager = RMManager::getInstance();
-    // mConfManager = new ConfManager();
     mSymIDManager = SymbolIDManager::getInstance();
     mShmemManager = ShmemManager::getInstance();
     mTimeManager = TimeManager::getInstance();
@@ -29,7 +27,11 @@ void TradingEngine::startUp(){
         m_strat_managers.emplace_back(StrategyManager());
     }
 
-    doc = parser.load("/home/git_repos/FinvizData/output.json");
+    //Alpaca
+    // doc = parser.load("/home/git_repos/FinvizData/output.json");
+
+    // IB
+    doc = parser.load("/home/git_repos/FinvizData/ib_output.json");
     
     simdjson::dom::object obj = doc["symbols"].get_object();
 
@@ -43,33 +45,23 @@ void TradingEngine::startUp(){
         bool easy_to_borrow = getEasyToBorrow(s_copy);
 
         SymbolId next_sym_id = mSymIDManager->getID(field.key);
-        m_symbol_managers[next_sym_id].OnInit(next_sym_id, open_time, easy_to_borrow, mShmemManager);
-        //Get ETB from output file
-        // m_symbol_managers[next_sym_id].OnInit(next_sym_id, open_time, doc["symbols"][field.key]["etb"].get_bool(), mShmemManager);
-        m_strat_managers[next_sym_id].OnInit(&m_symbol_managers[next_sym_id],doc["symbols"][field.key]);
+        //Alpaca
+        // m_symbol_managers[next_sym_id].OnInit(next_sym_id, open_time, easy_to_borrow, mShmemManager);
 
-        // if(easy_to_borrow)
-        //     std::cout << field.key << " easy to borrow" << std::endl;
-        // else
-        //     std::cout << field.key << " hard to borrow" << std::endl;
+        //IB
+        m_symbol_managers[next_sym_id].OnInit(next_sym_id, open_time, doc["symbols"][field.key]["etb"].get_bool(), mShmemManager);
+        m_strat_managers[next_sym_id].OnInit(&m_symbol_managers[next_sym_id],doc["symbols"][field.key]);
     }
 
     mShmemManager->startUp();
-
-    // mLogManager->startUp();
-    // mConfManager->startUp();
 }
 
 void TradingEngine::shutDown(){
-    // mLogManager->shutDown();
-    // mConfManager->shutDown();
     mShmemManager->shutDown();
     mRMManager->shutDown();
     mSymIDManager->shutDown();
     mTimeManager->shutDown();
 
-    // delete mLogManager;
-    // delete mConfManager;
     delete mShmemManager;
     delete mRMManager;
     delete mSymIDManager;
@@ -107,7 +99,7 @@ void TradingEngine::processMD(){
     mShmemManager->getMD(currentMD);
     if(currentMD.m_type == md_type::QUOTE){
         m_symbol_managers[currentMD.m_symbolId].gotQuote(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_ask_price, currentMD.m_ask_quant, currentMD.m_timestamp);
-        // m_strat_managers[currentMD.m_symbolId]->gotQuote();
+        m_strat_managers[currentMD.m_symbolId].gotQuote();
     }
     else if(currentMD.m_type == md_type::PRINT){
         m_symbol_managers[currentMD.m_symbolId].gotPrint(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_timestamp);
@@ -122,7 +114,11 @@ void TradingEngine::processMD(){
         m_strat_managers[currentMD.m_symbolId].gotPrint();
     }
     else if(currentMD.m_type == md_type::IMBALANCE){
-        m_symbol_managers[currentMD.m_symbolId].gotImbalance(currentMD.m_bid_price, currentMD.m_bid_quant, currentMD.m_ask_quant, currentMD.m_timestamp);
+        m_symbol_managers[currentMD.m_symbolId].gotImbalance(currentMD.m_bid_price, currentMD.m_ask_price, currentMD.m_bid_quant, currentMD.m_ask_quant, currentMD.m_timestamp);
+        m_strat_managers[currentMD.m_symbolId].gotImbalance();
+    }
+    else if(currentMD.m_type == md_type::SIGIMB){
+        m_symbol_managers[currentMD.m_symbolId].gotSigImbalance(currentMD.m_bid_price, currentMD.m_ask_price, currentMD.m_bid_quant, currentMD.m_ask_quant, currentMD.m_timestamp);
         m_strat_managers[currentMD.m_symbolId].gotImbalance();
     }
     currentTime = currentMD.m_timestamp;
@@ -130,7 +126,6 @@ void TradingEngine::processMD(){
 
 void TradingEngine::processTimeout(){
     mTimeManager->getTimeout(currentTimeout);
-    // m_symbol_managers[currentTimeout.m_sym_id].setCurrentTime(currentTime);
     m_strat_managers[currentTimeout.m_sym_id].gotTimeout(currentTimeout.m_strat_id);
 }
 

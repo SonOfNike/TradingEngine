@@ -36,12 +36,15 @@ public:
 
     SymbolId m_strat_id = 0;
 
+    bool m_run_on_quotes = false;
+
     StratState current_state = StratState::StartingState;
 
-    void onInit(SymbolManager* _sym_man, SymbolId _strat_id, StrategyManager* _strat_man){
+    void onInit(SymbolManager* _sym_man, SymbolId _strat_id, StrategyManager* _strat_man, bool _run_on_quotes){
         sym_man = _sym_man;
         strat_man = _strat_man;
         m_strat_id = _strat_id;
+        m_run_on_quotes = _run_on_quotes;
         mShmemManager = ShmemManager::getInstance();
         mRMManager = RMManager::getInstance();
         mSymIDManager = SymbolIDManager::getInstance();
@@ -65,13 +68,13 @@ public:
     void processRMFill(const side& _side, const Price& _price, const Shares& _shares);
 
     //passive cover
-    void passiveCover();
+    void passiveCover(bool _use_midpoint = false);
 
     bool pcoverOrderCanceled();
 
     void cancelPCover();
 
-    void sendPCover();
+    void sendPCover(bool _use_midpoint);
 
     MyOrderId getPCoverOrderID();
 };
@@ -81,8 +84,8 @@ template <typename Strat>
 class Strategy{
     Strat s;
 public:
-    void onInit(SymbolManager* _sym_man, SymbolId _strat_id, simdjson::dom::element _strat, StrategyManager* _strat_man){
-        s.onInit(_sym_man, _strat_id, _strat, _strat_man);
+    void onInit(SymbolManager* _sym_man, SymbolId _strat_id, simdjson::dom::element _strat, StrategyManager* _strat_man, bool _run_on_quotes){
+        s.onInit(_sym_man, _strat_id, _strat, _strat_man, _run_on_quotes);
     }
 
     void run(){
@@ -113,7 +116,8 @@ public:
     }
     void gotQuote(){
         s.gotQuote();
-        run();
+        if(s.m_run_on_quotes)
+            run();
     }
     void gotImbalance(){
         s.gotImbalance();    

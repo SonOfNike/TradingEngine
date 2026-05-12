@@ -17,6 +17,7 @@ class SymbolManager {
     LogItem newLog;
     // price data
     Price latest_print_price = 0;
+    Price nyse_open_price = 0;
 
     // quote data
     Price bid_price = 0;
@@ -24,6 +25,7 @@ class SymbolManager {
 
     // imbalance data
     Price clear_price = 0;
+    Price imb_exchange = 0;
     // Price far_price = 0;
 
     //vwap
@@ -49,7 +51,13 @@ class SymbolManager {
 
     SymbolId sym_id = 0;
 
+    side sig_imb_direction = side::BUY;
+
+    bool is_NYSE_open = false;
+
     bool is_shortable = true;
+
+    bool sig_imbalance = false;
 
 public:
 
@@ -63,20 +71,22 @@ public:
 
     void gotNYSEOpen(const Price& _print_price, const Shares& _print_shares, const Price& _ask_price, const Shares& _ask_shares, const Timestamp& _current_time){
         latest_print_price = _print_price;
+        nyse_open_price = _print_price;
         latest_print_quant = _print_shares;
         current_time = _current_time;
+        is_NYSE_open = true;
 
-        newLog.clear();
+        // newLog.clear();
 
-        newLog.m_type = log_type::NYSEOPEN;
-        newLog.m_current_time = _current_time;
-        newLog.m_symbolId = sym_id;
-        newLog.m_shares = _print_shares;
-        newLog.m_price = _print_price;
-        newLog.m_stratID = _ask_price;
-        newLog.m_delay = _ask_shares;
+        // newLog.m_type = log_type::NYSEOPEN;
+        // newLog.m_current_time = _current_time;
+        // newLog.m_symbolId = sym_id;
+        // newLog.m_shares = _print_shares;
+        // newLog.m_price = _print_price;
+        // newLog.m_stratID = _ask_price;
+        // newLog.m_delay = _ask_shares;
 
-        mShmemManager->pushLog(newLog);
+        // mShmemManager->pushLog(newLog);
     }
 
     void gotNASDOpen(const Price& _print_price, const Shares& _print_shares, const Price& _ask_price, const Shares& _ask_shares, const Timestamp& _current_time){
@@ -84,17 +94,17 @@ public:
         latest_print_quant = _print_shares;
         current_time = _current_time;
 
-        newLog.clear();
+        // newLog.clear();
 
-        newLog.m_type = log_type::NASDOPEN;
-        newLog.m_current_time = _current_time;
-        newLog.m_symbolId = sym_id;
-        newLog.m_shares = _print_shares;
-        newLog.m_price = _print_price;
-        newLog.m_stratID = _ask_price;
-        newLog.m_delay = _ask_shares;
+        // newLog.m_type = log_type::NASDOPEN;
+        // newLog.m_current_time = _current_time;
+        // newLog.m_symbolId = sym_id;
+        // newLog.m_shares = _print_shares;
+        // newLog.m_price = _print_price;
+        // newLog.m_stratID = _ask_price;
+        // newLog.m_delay = _ask_shares;
 
-        mShmemManager->pushLog(newLog);
+        // mShmemManager->pushLog(newLog);
     }
 
     void gotBid(){;}
@@ -124,10 +134,51 @@ public:
         // }
     }
 
-    void gotImbalance(const Price& _clear_price, const Shares& _imb_shares, const Shares& _paired_shares, const Timestamp& _current_time){
+    void gotImbalance(const Price& _clear_price, const Price& _exchange, const Shares& _imb_shares, const Shares& _paired_shares, const Timestamp& _current_time){
         clear_price = _clear_price;
         imb_shares = _imb_shares;
         paired_shares = _paired_shares;
+        imb_exchange = _exchange;
+        current_time = _current_time;
+
+        // newLog.clear();
+        // newLog.m_type = log_type::IMBALANCE;
+        // newLog.m_price = getImbPrice();
+        // newLog.m_price2 = getMidPoint();
+        // newLog.m_shares = getPairedShares();
+        // newLog.m_shares2 = getImbalanceQuant();
+        // newLog.m_symbolId = getSymbolID();
+        // newLog.m_delay = getImbExchange();
+        // newLog.m_current_time = getCurrentTime();
+
+        // mShmemManager->pushLog(newLog);
+    }
+
+    void gotSigImbalance(const Price& _clear_price, const Price& _exchange, const Shares& _imb_shares, const Shares& _paired_shares, const Timestamp& _current_time){
+        clear_price = _clear_price;
+        imb_shares = _imb_shares;
+        paired_shares = _paired_shares;
+        imb_exchange = _exchange;
+        current_time = _current_time;
+
+        sig_imbalance = true;
+
+        if(_imb_shares > 0)
+            sig_imb_direction = side::BUY;
+        else
+            sig_imb_direction = side::SELL;
+
+        newLog.clear();
+        newLog.m_type = log_type::IMBALANCE;
+        newLog.m_price = getImbPrice();
+        newLog.m_price2 = getMidPoint();
+        newLog.m_shares = getPairedShares();
+        newLog.m_shares2 = getImbalanceQuant();
+        newLog.m_symbolId = getSymbolID();
+        newLog.m_delay = getImbExchange();
+        newLog.m_current_time = getCurrentTime();
+
+        mShmemManager->pushLog(newLog);
     }
 
     Price getLatestPrintPrice(){
@@ -155,6 +206,14 @@ public:
 
     Price getImbPrice(){
         return clear_price;
+    }
+
+    Price getNYSEOpenPrice(){
+        return nyse_open_price;
+    }
+
+    Price getImbExchange(){
+        return imb_exchange;
     }
 
     // Price getNearPrice(){
@@ -217,6 +276,18 @@ public:
 
     bool isShortable(){
         return is_shortable;
+    }
+
+    bool GetIsNYSEOpen(){
+        return is_NYSE_open;
+    }
+
+    bool SigImbRecieved(){
+        return sig_imbalance;
+    }
+
+    side GetSigImbDir(){
+        return sig_imb_direction;
     }
 
     void processResp(const Response& currentResp){
