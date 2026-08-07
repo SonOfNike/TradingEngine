@@ -19,6 +19,7 @@ add_executable(TradingEngine
     ../ReqAlpacaAPI/asset.cpp
     ../ReqAlpacaAPI/order.cpp
     ../Utils/SymbolIDManager.cpp
+    ../Utils/pin_thread_functions.cpp
     ../Utils/simdjson/simdjson.cpp)
 
 target_link_libraries(TradingEngine PRIVATE OpenSSL::SSL OpenSSL::Crypto)
@@ -30,4 +31,4 @@ target_include_directories(TradingEngine PUBLIC
 include(CTest)
 enable_testing()
 
-set_property(TARGET TradingEngine PROPERTY CXX_STANDARD 17)
+set_property(TARGET TradingEngine PROPERTY CXX_STANDARD 20)

@@ -12,31 +12,33 @@ TimeManager* TimeManager::getInstance(){
 }
 
 void TimeManager::startUp(){
-    std::vector<Timeout> vec;
-    vec.reserve(1024);
+    for(int i = 0; i < TRADE_WTHREADS; i++){
+        std::vector<Timeout> vec;
+        vec.reserve(512);
 
-    min_heap = std::priority_queue<Timeout, std::vector<Timeout>, TimeoutComparator>(TimeoutComparator(), std::move(vec));
+        heaps[i].min_heap = std::priority_queue<Timeout, std::vector<Timeout>, TimeoutComparator>(TimeoutComparator(), std::move(vec));
+    }
 }
 
 void TimeManager::shutDown(){
     
 }
 
-void TimeManager::addTimeout(const Timestamp& time, const SymbolId& sym_id, const SymbolId& strat_id){
-    min_heap.push(Timeout(time, sym_id, strat_id));
+void TimeManager::addTimeout(const Timestamp& time, const SymbolId& sym_id, const SymbolId& strat_id, const int& index){
+    heaps[index].min_heap.push(Timeout(time, sym_id, strat_id));
 }
 
-bool TimeManager::gotTimeout(const Timestamp& _current_time){
-    if(min_heap.empty()) return false;
+bool TimeManager::gotTimeout(const Timestamp& _current_time, const int& index){
+    if(heaps[index].min_heap.empty()) return false;
     
-    if(_current_time >= min_heap.top().m_time)
+    if(_current_time >= heaps[index].min_heap.top().m_time)
         return true;
 
     return false;
 }
     
-void TimeManager::getTimeout(Timeout& next_timeout){
-    next_timeout = min_heap.top();
+void TimeManager::getTimeout(Timeout& next_timeout, const int& index){
+    next_timeout = heaps[index].min_heap.top();
 
-    min_heap.pop();
+    heaps[index].min_heap.pop();
 }

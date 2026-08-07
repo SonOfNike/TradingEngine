@@ -51,6 +51,8 @@ class SymbolManager {
 
     SymbolId sym_id = 0;
 
+    SymbolId thread_id = 0;
+
     side sig_imb_direction = side::BUY;
 
     bool is_NYSE_open = false;
@@ -63,107 +65,59 @@ public:
 
     Shares m_sym_position = 0;
     
-    void gotPrint(const Price& _print_price, const Shares& _print_shares, const Timestamp& _current_time){
-        latest_print_price = _print_price;
-        latest_print_quant = _print_shares;
-        current_time = _current_time;
+    void gotPrint(const MDupdate& _md){
+        latest_print_price = _md.m_bid_price;
+        latest_print_quant = _md.m_bid_quant;
+        if(!is_NYSE_open && _md.m_ask_quant == 10){
+            is_NYSE_open = true;
+        }
+        current_time = _md.m_timestamp;
     }
 
-    void gotNYSEOpen(const Price& _print_price, const Shares& _print_shares, const Price& _ask_price, const Shares& _ask_shares, const Timestamp& _current_time){
-        latest_print_price = _print_price;
-        nyse_open_price = _print_price;
-        latest_print_quant = _print_shares;
-        current_time = _current_time;
+    void gotNYSEOpen(const MDupdate& _md){
+        latest_print_price = _md.m_bid_price;
+        nyse_open_price = _md.m_bid_price;
+        latest_print_quant = _md.m_bid_quant;
+        current_time = _md.m_timestamp;
         is_NYSE_open = true;
-
-        // newLog.clear();
-
-        // newLog.m_type = log_type::NYSEOPEN;
-        // newLog.m_current_time = _current_time;
-        // newLog.m_symbolId = sym_id;
-        // newLog.m_shares = _print_shares;
-        // newLog.m_price = _print_price;
-        // newLog.m_stratID = _ask_price;
-        // newLog.m_delay = _ask_shares;
-
-        // mShmemManager->pushLog(newLog);
     }
 
-    void gotNASDOpen(const Price& _print_price, const Shares& _print_shares, const Price& _ask_price, const Shares& _ask_shares, const Timestamp& _current_time){
-        latest_print_price = _print_price;
-        latest_print_quant = _print_shares;
-        current_time = _current_time;
-
-        // newLog.clear();
-
-        // newLog.m_type = log_type::NASDOPEN;
-        // newLog.m_current_time = _current_time;
-        // newLog.m_symbolId = sym_id;
-        // newLog.m_shares = _print_shares;
-        // newLog.m_price = _print_price;
-        // newLog.m_stratID = _ask_price;
-        // newLog.m_delay = _ask_shares;
-
-        // mShmemManager->pushLog(newLog);
+    void gotNASDOpen(const MDupdate& _md){
+        latest_print_price = _md.m_bid_price;
+        latest_print_quant = _md.m_bid_quant;
+        current_time = _md.m_timestamp;
     }
 
     void gotBid(){;}
 
     void gotAsk(){;}
 
-    void gotQuote(const Price& _bid_price, const Shares& _bid_shares, const Price& _ask_price, const Shares& _ask_shares, const Timestamp& _current_time){
-        bid_price = _bid_price;
+    void gotQuote(const MDupdate& _md){
+        bid_price = _md.m_bid_price;
         // bid_quant = _bid_shares;
-        ask_price = _ask_price;
+        ask_price = _md.m_ask_price;
         // ask_quant = _ask_shares;
-        current_time = _current_time;
-
-        // timespec ts;
-        // clock_gettime(CLOCK_REALTIME, &ts);
-        // uint64_t nanos = uint64_t(ts.tv_sec) * 1000000000ULL + ts.tv_nsec;
-
-        // if((nanos % NANOS_PER_DAY) - _current_time > 750000000){
-
-        //     newLog.clear();
-
-        //     newLog.m_type = log_type::MDDELAY;
-        //     newLog.m_current_time = _current_time;
-        //     newLog.m_delay = (nanos % NANOS_PER_DAY) - _current_time;
-
-        //     mShmemManager->pushLog(newLog);
-        // }
+        current_time = _md.m_timestamp;
     }
 
-    void gotImbalance(const Price& _clear_price, const Price& _exchange, const Shares& _imb_shares, const Shares& _paired_shares, const Timestamp& _current_time){
-        clear_price = _clear_price;
-        imb_shares = _imb_shares;
-        paired_shares = _paired_shares;
-        imb_exchange = _exchange;
-        current_time = _current_time;
-
-        // newLog.clear();
-        // newLog.m_type = log_type::IMBALANCE;
-        // newLog.m_price = getImbPrice();
-        // newLog.m_price2 = getMidPoint();
-        // newLog.m_shares = getPairedShares();
-        // newLog.m_shares2 = getImbalanceQuant();
-        // newLog.m_symbolId = getSymbolID();
-        // newLog.m_delay = getImbExchange();
-        // newLog.m_current_time = getCurrentTime();
-
-        // mShmemManager->pushLog(newLog);
+    void gotImbalance(const MDupdate& _md){
+        clear_price = _md.m_bid_price;
+        imb_shares = _md.m_bid_quant;
+        paired_shares = _md.m_ask_quant;
+        imb_exchange = _md.m_ask_price;
+        current_time = _md.m_timestamp;
     }
 
-    void gotSigImbalance(const Price& _clear_price, const Price& _exchange, const Shares& _imb_shares, const Shares& _paired_shares, const Timestamp& _current_time){
-        clear_price = _clear_price;
-        imb_shares = _imb_shares;
-        paired_shares = _paired_shares;
-        imb_exchange = _exchange;
-        current_time = _current_time;
+    void gotSigImbalance(const MDupdate& _md){
+        clear_price = _md.m_bid_price;
+        imb_shares = _md.m_bid_quant;
+        paired_shares = _md.m_ask_quant;
+        imb_exchange = _md.m_ask_price;
+        current_time = _md.m_timestamp;
 
         sig_imbalance = true;
 
-        if(_imb_shares > 0)
+        if(imb_shares > 0)
             sig_imb_direction = side::BUY;
         else
             sig_imb_direction = side::SELL;
@@ -178,7 +132,7 @@ public:
         newLog.m_delay = getImbExchange();
         newLog.m_current_time = getCurrentTime();
 
-        mShmemManager->pushLog(newLog);
+        mShmemManager->pushLog(newLog, thread_id);
     }
 
     Price getLatestPrintPrice(){
@@ -265,6 +219,7 @@ public:
 
     void OnInit(const SymbolId& _sym_id, const Timestamp& _market_open, const bool& _is_shortable, ShmemManager* _schmemMan){
         sym_id = _sym_id;
+        thread_id = _sym_id % TRADE_WTHREADS;
         mShmemManager = _schmemMan;
         opening_auction = _market_open;
         is_shortable = _is_shortable;
@@ -272,6 +227,10 @@ public:
 
     SymbolId getSymbolID(){
         return sym_id;
+    }
+
+    SymbolId getThreadID(){
+        return thread_id;
     }
 
     bool isShortable(){

@@ -2,8 +2,6 @@
 
 #include "ShmemManager.h"
 #include "RMManager.h"
-// #include "LogManager.h"
-// #include "ConfManager.h"
 #include "SymbolManager.h"
 #include "TimeManager.h"
 #include "StrategyManager.h"
@@ -15,36 +13,44 @@
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "../Utils/httplib.h"
 
-class TradingEngine {
-    // singletons
-    // LogManager* mLogManager;
-    RMManager* mRMManager;
-    // ConfManager* mConfManager;
-    ShmemManager* mShmemManager;
-    SymbolIDManager* mSymIDManager;
-    TimeManager* mTimeManager;
-
+struct alignas(64) ThreadContext{
     MDupdate    currentMD;
     Response    currentResp;
     Timeout     currentTimeout;
     Timestamp   currentTime = 0;
+};
 
-    std::string api_key_id_;
-    std::string api_secret_key_;
+struct alignas(64) SymbolStrat{
+    SymbolManager m_sym_man;
+    StrategyManager m_strat_man;
+};
 
-    std::vector<StrategyManager> m_strat_managers;
-    std::vector<SymbolManager> m_symbol_managers;
+class TradingEngine {
+    // singletons
+    RMManager* mRMManager;
+    ShmemManager* mShmemManager;
+    SymbolIDManager* mSymIDManager;
+    TimeManager* mTimeManager;
+
+    // MDupdate    currentMD[5];
+    // Response    currentResp[5];
+    // Timeout     currentTimeout[5];
+    // Timestamp   currentTime[5] = {0,0,0,0,0};
+
+    std::array<ThreadContext, TRADE_WTHREADS> mThreadContexts;
+
+    // std::vector<StrategyManager> m_strat_managers;
+    // std::vector<SymbolManager> m_symbol_managers;
+
+    std::vector<SymbolStrat> m_symbol_strats;
 
 public:
     TradingEngine(){;}
     ~TradingEngine(){;}
     void startUp();
     void shutDown();
-    void run();
-    void processMD();
-    void processResp();
-    void processOrderError();
-    void processTimeout();
-    httplib::Headers headers();
-    bool getEasyToBorrow(const std::string& symbol);
+    void run(const int& index);
+    void processMD(const int& index);
+    void processResp(const int& index);
+    void processTimeout(const int& index);
 };

@@ -27,29 +27,29 @@ void RMManager::shutDown(){
 }
 
 void RMManager::subtractExposure(const Price& _exposure){
-    m_global_exposure -= abs(_exposure);
+    m_global_exposure.fetch_sub(abs(_exposure), std::memory_order_relaxed);
 }
 
 void RMManager::addExposure(const Price& _exposure){
-    m_global_exposure += abs(_exposure);
+    m_global_exposure.fetch_add(abs(_exposure), std::memory_order_relaxed);
 }
 
 void RMManager::subtractPNL(const Price& _pnl){
-    m_global_pnl -= _pnl;
+    m_global_pnl.fetch_sub(_pnl, std::memory_order_relaxed);
 }
 
 void RMManager::addPNL(const Price& _pnl){
-    m_global_pnl += _pnl;
+    m_global_pnl.fetch_add(_pnl, std::memory_order_relaxed);
 }
 
 bool RMManager::exposureLimitBreached(){
-    if(m_global_exposure >= m_global_exposure_limit) return true;
+    if(m_global_exposure.load(std::memory_order_acquire) >= m_global_exposure_limit) return true;
 
     return false;
 }
 
 bool RMManager::pnlLimitBreached(){
-    if(m_global_pnl >= m_global_pnl_limit) return true;
+    if(m_global_pnl.load(std::memory_order_acquire) >= m_global_pnl_limit) return true;
 
     return false;
 }

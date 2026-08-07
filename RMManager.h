@@ -1,14 +1,15 @@
 #pragma once
 
 #include "../Utils/enums_typedef.h"
+#include <atomic>
 
 class RMManager {
 private:
     static RMManager* uniqueInstance;
     RMManager(){;}
 
-    Price m_global_exposure = 0;
-    Price m_global_pnl = 0;
+    std::atomic<Price> m_global_exposure = 0;
+    std::atomic<Price> m_global_pnl = 0;
 
     Price m_global_exposure_limit = 0;
     Price m_global_pnl_limit = 0;

@@ -35,8 +35,11 @@ public:
     Shares m_strat_position = 0;
 
     SymbolId m_strat_id = 0;
+    SymbolId m_sym_id = 0;
+    SymbolId m_thread_id = 0;
 
     bool m_run_on_quotes = false;
+    bool m_shortable = false;
 
     StratState current_state = StratState::StartingState;
 
@@ -49,6 +52,10 @@ public:
         mRMManager = RMManager::getInstance();
         mSymIDManager = SymbolIDManager::getInstance();
         mTimeManager = TimeManager::getInstance();
+
+        m_sym_id = sym_man->getSymbolID();
+        m_thread_id = sym_man->getThreadID();
+        m_shortable = sym_man->isShortable();
     }
 
     void setState(StratState new_state){
@@ -68,13 +75,13 @@ public:
     void processRMFill(const side& _side, const Price& _price, const Shares& _shares);
 
     //passive cover
-    void passiveCover(bool _use_midpoint = false);
+    void passiveCover(bool _use_midpoint = false, Shares desired_pos = 0);
 
     bool pcoverOrderCanceled();
 
     void cancelPCover();
 
-    void sendPCover(bool _use_midpoint);
+    void sendPCover(bool _use_midpoint, Shares desired_pos);
 
     MyOrderId getPCoverOrderID();
 };
